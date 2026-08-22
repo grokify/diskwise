@@ -82,7 +82,7 @@ func (db *DB) IngestScan(ctx context.Context, tree *scan.Node, vol *platform.Vol
 		volID = sql.NullInt64{Int64: id, Valid: true}
 	}
 
-	if _, err := insertTree(ctx, tx, runID, volID, sql.NullInt64{}, tree); err != nil {
+	if err := insertTree(ctx, tx, runID, volID, sql.NullInt64{}, tree); err != nil {
 		return nil, err
 	}
 
@@ -146,7 +146,7 @@ func (db *DB) Rescan(ctx context.Context, path string, opts scan.Options) (*scan
 		return nil, nil, nil, err
 	}
 
-	if _, err := insertTree(ctx, tx, runID, sql.NullInt64{}, parentID, tree); err != nil {
+	if err := insertTree(ctx, tx, runID, sql.NullInt64{}, parentID, tree); err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -251,35 +251,35 @@ INSERT INTO nodes (
 // parent_id references are always valid. Reusing one prepared
 // statement for the whole tree is what keeps bulk ingest fast: SQLite
 // only has to parse and plan the insert once, not once per node.
-func insertTree(ctx context.Context, tx *sql.Tx, runID int64, volID, parentID sql.NullInt64, n *scan.Node) (int64, error) {
+func insertTree(ctx context.Context, tx *sql.Tx, runID int64, volID, parentID sql.NullInt64, n *scan.Node) error {
 	stmt, err := tx.PrepareContext(ctx, insertNodeSQL)
 	if err != nil {
-		return 0, fmt.Errorf("index: prepare node insert: %w", err)
+		return fmt.Errorf("index: prepare node insert: %w", err)
 	}
 	defer func() { _ = stmt.Close() }()
 
 	return insertNode(ctx, stmt, runID, volID, parentID, n)
 }
 
-func insertNode(ctx context.Context, stmt *sql.Stmt, runID int64, volID, parentID sql.NullInt64, n *scan.Node) (int64, error) {
+func insertNode(ctx context.Context, stmt *sql.Stmt, runID int64, volID, parentID sql.NullInt64, n *scan.Node) error {
 	res, err := stmt.ExecContext(ctx,
 		runID, volID, parentID, n.Path, n.Name, filepath.Ext(n.Name), string(kindFromScan(n.Kind)),
 		n.LogicalSize, n.AllocatedSize, n.SubtreeLogicalSize, n.SubtreeAllocatedSize, string(stateFromScan(n.State)),
 		n.Duplicate, n.ModTime.Unix(), n.Inode, n.Device, n.Nlink,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("index: insert node %s: %w", n.Path, err)
+		return fmt.Errorf("index: insert node %s: %w", n.Path, err)
 	}
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("index: node %s last insert id: %w", n.Path, err)
+		return fmt.Errorf("index: node %s last insert id: %w", n.Path, err)
 	}
 
 	childParentID := sql.NullInt64{Int64: id, Valid: true}
 	for _, child := range n.Children {
-		if _, err := insertNode(ctx, stmt, runID, volID, childParentID, child); err != nil {
-			return 0, err
+		if err := insertNode(ctx, stmt, runID, volID, childParentID, child); err != nil {
+			return err
 		}
 	}
-	return id, nil
+	return nil
 }

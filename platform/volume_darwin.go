@@ -14,9 +14,12 @@ func VolumeStatsForPath(path string) (VolumeStats, error) {
 	if err := syscall.Statfs(path, &raw); err != nil {
 		return VolumeStats{}, fmt.Errorf("platform: statfs %s: %w", path, err)
 	}
-	capacity := int64(raw.Blocks) * int64(raw.Bsize)
-	used := capacity - int64(raw.Bfree)*int64(raw.Bsize)
-	available := int64(raw.Bavail) * int64(raw.Bsize)
+	// G115: statfs block counts/sizes are uint64/uint32 on Darwin;
+	// converting to int64 would only overflow past ~9.2 EiB of
+	// reported blocks×block-size, far beyond any real volume.
+	capacity := int64(raw.Blocks) * int64(raw.Bsize)     //nolint:gosec
+	used := capacity - int64(raw.Bfree)*int64(raw.Bsize) //nolint:gosec
+	available := int64(raw.Bavail) * int64(raw.Bsize)    //nolint:gosec
 	return VolumeStats{
 		MountPoint:     cString(raw.Mntonname[:]),
 		FSType:         cString(raw.Fstypename[:]),
@@ -35,7 +38,7 @@ func cString(b []int8) string {
 	}
 	buf := make([]byte, n)
 	for i, c := range b[:n] {
-		buf[i] = byte(c)
+		buf[i] = byte(c) //nolint:gosec // G115: reinterpreting a C char's raw byte, not a numeric range conversion
 	}
 	return string(buf)
 }

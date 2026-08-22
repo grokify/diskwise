@@ -166,6 +166,11 @@ func (db *DB) FilesByExtensions(ctx context.Context, rootPath string, exts []str
 		args = append(args, strings.ToLower(e))
 	}
 
+	// The concatenated parts are nodeRowColumns (a package constant)
+	// and a fixed "?" placeholder string sized to len(exts) — every
+	// actual value flows through args via QueryContext's
+	// parameterization, never through this string.
+	//nolint:gosec // G202: no untrusted input reaches the query text
 	query := `SELECT ` + nodeRowColumns + ` FROM nodes
 		WHERE (path = ? OR path LIKE ?) AND kind = 'file' AND lower(ext) IN (` + strings.Join(placeholders, ",") + `)
 		ORDER BY allocated_size DESC`

@@ -102,6 +102,7 @@ func WriteHTML(w io.Writer, root string, rows []Row, generatedAt time.Time) erro
 	return htmlTemplate.Execute(w, data)
 }
 
+//nolint:gosec // G203: path comes from our own filesystem scan, not external/user-supplied input
 func fileURL(path string) template.URL {
 	return template.URL((&url.URL{Scheme: "file", Path: path}).String())
 }
