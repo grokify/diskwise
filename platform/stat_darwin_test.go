@@ -14,7 +14,7 @@ func TestStat_RegularFile(t *testing.T) {
 	path := filepath.Join(dir, "data.bin")
 	data := bytes.Repeat([]byte{0xAB}, 128<<10) // 128 KiB non-zero data
 
-	if err := os.WriteFile(path, data, 0o644); err != nil {
+	if err := os.WriteFile(path, data, 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -76,7 +76,7 @@ func TestStat_HardLink(t *testing.T) {
 	original := filepath.Join(dir, "original.bin")
 	linked := filepath.Join(dir, "linked.bin")
 
-	if err := os.WriteFile(original, []byte("hello"), 0o644); err != nil {
+	if err := os.WriteFile(original, []byte("hello"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Link(original, linked); err != nil {
@@ -106,7 +106,7 @@ func TestStat_Symlink(t *testing.T) {
 	target := filepath.Join(dir, "target.txt")
 	link := filepath.Join(dir, "link.txt")
 
-	if err := os.WriteFile(target, []byte("x"), 0o644); err != nil {
+	if err := os.WriteFile(target, []byte("x"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Symlink(target, link); err != nil {
