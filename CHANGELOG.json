@@ -1,0 +1,52 @@
+{
+  "irVersion": "1.0",
+  "project": "diskwise",
+  "repository": "https://github.com/grokify/diskwise",
+  "versioning": "semver",
+  "commitConvention": "conventional",
+  "maintainers": ["grokify", "johncwang@gmail.com"],
+  "releases": [
+    {
+      "version": "v0.1.0",
+      "date": "2026-08-22",
+      "commit": "dcc5c78",
+      "highlights": [
+        { "description": "First release: a full discovery pipeline from a prioritized concurrent filesystem scanner through a SQLite index, knowledge-aware detectors, and a fail-closed policy engine, surfaced through the `diskwise` CLI (`scan`, `hotspots`, `opportunities`, `savings`)." },
+        { "description": "`insights` package: a JSON intermediate representation an LLM agent can fill out with ranked, evidence-backed savings opportunities — including kept/redundant path pairs and per-tool reclaim actions — rendered deterministically to Markdown or HTML.", "commit": "eb6d7b6" },
+        { "description": "`report` command: self-contained, sortable/filterable HTML and XLSX exports of reclaim opportunities, with no external script or CDN dependency.", "commit": "90e0088" }
+      ],
+      "added": [
+        { "description": "`platform`: macOS allocated size (st_blocks), device/inode, and per-volume capacity/mount detection", "commit": "8f5fb0b" },
+        { "description": "`scan`: concurrent priority-queue directory walker (GOMAXPROCS workers, largest-known-bytes-first) with hard-link dedup and mount-boundary/depth handling", "commit": "a08769d" },
+        { "description": "`index`: SQLite index (modernc.org/sqlite, no cgo) with batched ingest, subtree byte rollups, and subtree-replacing rescan", "commit": "ad572d9" },
+        { "description": "`entity`: core entity model (cache, archive, database, container, VM, artifact family, ...) for attributing bytes to meaningful things instead of raw paths", "commit": "9df61e4" },
+        { "description": "`knowledge`: registry of known heavy-storage locations (Docker Desktop, Xcode, Homebrew, Go, Node, Python, AI models, iOS backups, browsers, Trash)", "commit": "01824c9" },
+        { "description": "`policy`: fail-closed action-class engine — managed data (databases, containers, VMs, apps) capped at backup_then_delete, safe_delete requires ≥0.8 confidence", "commit": "7056ef7" },
+        { "description": "`detect`: KnownLocationDetector, ArchiveInstallerDetector, ArtifactFamilyDetector, and LargeUnexplainedDetector, each claiming disjoint territory so nothing is double-counted", "commit": "495eda5" },
+        { "description": "`rollup`: collapses a finding's covered paths to the smallest fully-covered directory set, decomposing partially covered (\"mixed\") directories instead of over-claiming them", "commit": "76afd62" },
+        { "description": "`service`: scan/rescan/summary/tree/largest/hotspots/opportunities/savings orchestration over the scanner, index, knowledge registry, detectors, policy engine, and rollup", "commit": "7f6eb46" },
+        { "description": "`report`: HTML (vendored sortable/filterable table, file:// links) and XLSX (frozen header, autofilter) exports of opportunities", "commit": "90e0088" },
+        { "description": "`insights`: JSON IR (`insights.Report`) for narrative savings write-ups, with a generated/embedded JSON Schema and deterministic Markdown/HTML renderers", "commit": "eb6d7b6" },
+        { "description": "`diskwise` CLI: `scan`, `rescan`, `summary`, `tree`, `largest`, `hotspots`, `opportunities`, `savings`, `report`, and `insights` subcommands, with a live terminal progress meter during scan/rescan and `--json` output on every command", "commit": "6cf2057" }
+      ],
+      "documentation": [
+        { "description": "Add PRD, TRD, PLAN, and a phased ROADMAP (RMI-DISKWISE-001 through 025) under docs/specs/", "commit": "b9f6037" },
+        { "description": "Add CI/lint/godoc/license/visualization badges to README.md", "commit": "76526a7" }
+      ],
+      "build": [
+        { "description": "Scaffold Go module, golangci-lint config, GitHub Actions build/test/lint workflow, and package skeletons for both binaries", "commit": "7f2c7ad" },
+        { "description": "Rename the CI workflow file to the org's common naming convention", "commit": "055672b" },
+        { "description": "Switch CI to grokify's shared reusable workflows (go-ci, go-lint, go-sast-codeql) and add dependabot config", "commit": "c64c5ee" },
+        { "description": "Point shared workflow references at `main`", "commit": "dcc5c78" }
+      ],
+      "dependencies": [
+        { "description": "Bump `grokify/.github` reusable workflow `go-sast-codeql.yaml` from 0.2.0 to 0.4.0", "commit": "2eda9c1" },
+        { "description": "Bump `grokify/.github` reusable workflow `go-ci.yaml` from 0.2.0 to 0.4.0", "commit": "b11b04f" },
+        { "description": "Bump `grokify/.github` reusable workflow `go-lint.yaml` from 0.2.0 to 0.4.0", "commit": "50f5aa6" }
+      ],
+      "internal": [
+        { "description": "Add MIT LICENSE file", "commit": "6a73b61" }
+      ]
+    }
+  ]
+}
