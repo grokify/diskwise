@@ -5,3 +5,9 @@
 *.db-shm
 .DS_Store
 IDEATION_CHAT*.md
+
+# Default output of `diskwise report`/`diskwise insights render` when
+# run without --out from inside this repo — never intended to be
+# committed, and may contain real local filesystem paths.
+/diskwise-report.*
+/diskwise-insights.*
