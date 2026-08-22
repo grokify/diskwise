@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/grokify/diskwise/insights/report",
+  "$ref": "#/$defs/Report",
+  "$defs": {
+    "Action": {
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "filesystem",
+            "app_ui",
+            "cli"
+          ]
+        },
+        "target": {
+          "type": "string"
+        },
+        "directories": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Filesystem paths this action clears; primary payload for method=filesystem when there is no kept/redundant pairing to preserve."
+        },
+        "pairs": {
+          "items": {
+            "$ref": "#/$defs/Pair"
+          },
+          "type": "array",
+          "description": "Kept-vs-redundant path pairs"
+        },
+        "command": {
+          "type": "string",
+          "description": "A single shell command; primary payload for method=cli."
+        },
+        "steps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Ordered instructions; primary payload for method=app_ui"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "method"
+      ]
+    },
+    "Opportunity": {
+      "properties": {
+        "rank": {
+          "type": "integer",
+          "description": "1-based priority order; lower is more valuable/confident to investigate first."
+        },
+        "title": {
+          "type": "string",
+          "description": "Short human-readable headline"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "duplicate_backup",
+            "duplicate_download",
+            "regeneratable_cache",
+            "managed_app_data",
+            "unexplained_large",
+            "other"
+          ]
+        },
+        "directories": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Absolute paths this opportunity covers. The primary 'where to look' signal."
+        },
+        "estimatedBytes": {
+          "type": "integer",
+          "description": "Estimated reclaimable allocated bytes"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Why this looks reclaimable: the reasoning"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Concrete observations backing Description"
+        },
+        "verificationSteps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "What a human should check before acting — this package never recommends unverified deletion."
+        },
+        "actions": {
+          "items": {
+            "$ref": "#/$defs/Action"
+          },
+          "type": "array",
+          "description": "How to reclaim once verified"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "rank",
+        "title",
+        "category",
+        "directories",
+        "estimatedBytes",
+        "confidence",
+        "description"
+      ]
+    },
+    "Pair": {
+      "properties": {
+        "kept": {
+          "type": "string",
+          "description": "The path worth keeping."
+        },
+        "redundant": {
+          "type": "string",
+          "description": "The path this pairing makes disposable."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Why they're believed to be redundant"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "kept",
+        "redundant"
+      ]
+    },
+    "Report": {
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "enum": [
+            "1"
+          ],
+          "description": "Must be insights.SchemaVersion; a renderer rejects any other value."
+        },
+        "root": {
+          "type": "string",
+          "description": "Absolute path the analysis was scoped to."
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "usedBytes": {
+          "type": "integer",
+          "description": "Total bytes used on the volume containing Root"
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "description": "Total volume capacity in bytes"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Two to four sentence narrative overview: the headline finding and why it matters."
+        },
+        "opportunities": {
+          "items": {
+            "$ref": "#/$defs/Opportunity"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "root",
+        "generatedAt",
+        "summary",
+        "opportunities"
+      ]
+    }
+  }
+}
