@@ -92,6 +92,21 @@ Order of work:
 
 **Verify:** contract tests green in CI; dogfood transcript reviewed; `golangci-lint` clean; coverage badge updated (`gocoverbadge -dir . -exclude cmd -badge-only`).
 
+## Phase 6 — Reporting & narrative analysis
+
+**Goal:** `diskwise report` and `diskwise insights` give a shareable/agent-authorable view of `opportunities` beyond the terminal.
+
+Not part of the original phase sequence above — built during v0.1.0 development in direct response to user requests, after Phase 3 shipped. Recorded here after the fact so the roadmap matches actual code state; see ROADMAP.md Phase 6 for RMI numbers.
+
+Order of work:
+
+1. `report/`: flatten `service.Opportunity` into report rows; self-contained HTML (vendored sortable/filterable table script, no CDN, `file://` links); XLSX via `excelize` (frozen header, autofilter).
+2. `insights/`: `insights.Report` JSON IR (opportunities with directories, evidence, kept/redundant path `Pair`s, and `Action`s discriminated by method — filesystem/cli/app_ui); JSON Schema generated from the Go structs (`invopop/jsonschema` via a local generator, since `schemakit generate`'s network-fetch approach can't resolve an unpublished/private module) and embedded via `go:embed`; deterministic Markdown and HTML renderers.
+
+**Depends on:** Phase 3 (`service.Opportunities`).
+
+**Verify:** `insights.Report.Validate()` rejects malformed/incomplete documents (bad schema version, gap in rank sequence, unknown enum values, incomplete `Pair`); `WriteMarkdown`/`WriteHTML` are pure functions of the `Report` (same input → same output); round-tripped against a real home-directory scan, not just fixtures.
+
 ## Explicitly deferred (post-V1 backlog)
 
 SwiftUI app + visual screenshot review grid; cleanup execution (Trash-first, verified backups); FSEvents incremental index + growth snapshots ("why did my disk grow?"); deep service adapters (Docker API, Postgres/MySQL queries); duplicate/near-duplicate detection; Linux port; versioned external rule corpus.
