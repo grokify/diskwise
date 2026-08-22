@@ -23,7 +23,7 @@ func openTestDB(t *testing.T) *DB {
 
 func writeFile(t *testing.T, path string, size int) {
 	t.Helper()
-	if err := os.WriteFile(path, make([]byte, size), 0o644); err != nil {
+	if err := os.WriteFile(path, make([]byte, size), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }

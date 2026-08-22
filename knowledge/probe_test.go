@@ -9,7 +9,7 @@ import (
 func TestPathExists(t *testing.T) {
 	dir := t.TempDir()
 	present := filepath.Join(dir, "here.txt")
-	if err := os.WriteFile(present, []byte("x"), 0o644); err != nil {
+	if err := os.WriteFile(present, []byte("x"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
