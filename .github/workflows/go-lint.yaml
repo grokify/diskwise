@@ -1,4 +1,4 @@
-name: Go CI
+name: Go Lint
 permissions:
   contents: read
 on:
@@ -9,7 +9,8 @@ on:
       - '**.go'
       - 'go.mod'
       - 'go.sum'
-      - '.github/workflows/go-ci.yaml'
+      - '.golangci.yml'
+      - '.github/workflows/go-lint.yaml'
   pull_request:
     branches:
       - main
@@ -17,9 +18,10 @@ on:
       - '**.go'
       - 'go.mod'
       - 'go.sum'
-      - '.github/workflows/go-ci.yaml'
+      - '.golangci.yml'
+      - '.github/workflows/go-lint.yaml'
   workflow_dispatch:
 
 jobs:
-  ci:
-    uses: grokify/.github/.github/workflows/go-ci.yaml@439a05bbe1aef3e1f4b26a5c450d6c92de1b204c
+  lint:
+    uses: grokify/.github/.github/workflows/go-lint.yaml@439a05bbe1aef3e1f4b26a5c450d6c92de1b204c
