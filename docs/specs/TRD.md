@@ -43,7 +43,7 @@ Design rules:
 - **Go:** 1.25+
 - **CLI:** `github.com/spf13/cobra`
 - **MCP:** `github.com/modelcontextprotocol/go-sdk` (official Go SDK)
-- **SQLite driver:** `modernc.org/sqlite` (pure Go, no cgo) preferred for simple builds/cross-compilation; switch to `mattn/go-sqlite3` only if bulk-ingest benchmarks demand it (decision point in Phase 1).
+- **SQLite driver:** `modernc.org/sqlite` (pure Go, no cgo). **Resolved in Phase 1:** a single prepared statement reused across a batch ingest reached 89.7k nodes/sec, comfortably past the ≥50k/sec target — no benchmark-driven switch to `mattn/go-sqlite3` was needed.
 
 Per global convention, **verify latest versions at implementation time** (GitHub releases / pkg.go.dev / `go list -m -versions`); do not assume versions written here or in training data are current.
 

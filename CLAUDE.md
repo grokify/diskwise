@@ -81,6 +81,9 @@ file or `go mod tidy` will silently strip the dependency.
 RMI slug: `DISKWISE`. Phases and RMI IDs are tracked in
 `docs/specs/ROADMAP.md`; commits implementing one carry the trailer
 `Refs: RMI-DISKWISE-NNN` (see the org CLAUDE.md for the general
-convention). Phase status there was accurate as of RMI-015; verify
-against actual code state before trusting a "planned" label — the doc
-is not automatically kept in sync with implementation.
+convention). Phase status there was reconciled against actual code
+state as of v0.1.0 (RMI-001 through 015 and the unplanned Phase 6
+RMI-026/027 marked `done`; Phase 4/5 still `planned`). It is not
+automatically kept in sync with implementation — re-verify status
+against the code before trusting a label, and update the table when
+you notice drift instead of leaving it stale for the next session.

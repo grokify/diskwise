@@ -42,10 +42,11 @@ for the implementation sequence.
 
 ## Status
 
-**v0.1.0** — Phases 1–3 of the roadmap are implemented: the scanner,
-SQLite index, knowledge registry, detectors, policy engine, and the
-`diskwise` CLI. The MCP server (`cmd/diskwise-mcp`) is a skeleton with
-no tools registered yet. See
+**v0.1.0** — Phases 1–3 and 6 of the roadmap are implemented: the
+scanner, SQLite index, knowledge registry, detectors, policy engine,
+report/insights output formats, and the `diskwise` CLI. The MCP server
+(`cmd/diskwise-mcp`) is a skeleton with no tools registered yet (Phase
+4–5, still planned). See
 [`docs/releases/v0.1.0.md`](docs/releases/v0.1.0.md) for the full
 release notes and [`CHANGELOG.md`](CHANGELOG.md) for the commit-level
 history.
