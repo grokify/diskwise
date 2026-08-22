@@ -23,3 +23,8 @@ on:
 jobs:
   ci:
     uses: grokify/.github/.github/workflows/go-ci.yaml@main
+    # diskwise's platform/ package uses Darwin-only syscalls (st_blocks
+    # allocated size, volume stats) with no Linux/Windows fallback, so
+    # it only builds and tests on macOS.
+    with:
+      platforms: '["macos-latest"]'

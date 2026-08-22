@@ -10,6 +10,7 @@ on:
       - 'go.mod'
       - 'go.sum'
       - '.golangci.yml'
+      - '.golangci.yaml'
       - '.github/workflows/go-lint.yaml'
   pull_request:
     branches:
@@ -19,9 +20,28 @@ on:
       - 'go.mod'
       - 'go.sum'
       - '.golangci.yml'
+      - '.golangci.yaml'
       - '.github/workflows/go-lint.yaml'
   workflow_dispatch:
 
 jobs:
   lint:
-    uses: grokify/.github/.github/workflows/go-lint.yaml@main
+    # Not the shared grokify/.github/.github/workflows/go-lint.yaml
+    # reusable workflow: it hardcodes runs-on: ubuntu-latest with no
+    # platform input, and diskwise's platform/ package uses Darwin-only
+    # syscalls with no Linux fallback, so it can only build on macOS.
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.x'
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          args: --timeout 3m --verbose
