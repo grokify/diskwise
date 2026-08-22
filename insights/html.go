@@ -106,6 +106,8 @@ func WriteHTML(w io.Writer, r Report) error {
 // anything else with "#ZgotmplZ". file:// is legitimate here because
 // we construct it ourselves from an already-analyzed filesystem path
 // via net/url, not from unescaped external input.
+//
+//nolint:gosec // G203: path comes from our own filesystem scan, not external/user-supplied input
 func fileURL(path string) template.URL {
 	return template.URL((&url.URL{Scheme: "file", Path: path}).String())
 }
