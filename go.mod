@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	github.com/grokify/mogo v0.74.8
 	github.com/invopop/jsonschema v0.14.0
-	github.com/modelcontextprotocol/go-sdk v1.7.0
+	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/xuri/excelize/v2 v2.11.0
 	modernc.org/sqlite v1.58.0
