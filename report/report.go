@@ -25,8 +25,10 @@ type Row struct {
 	LogicalSize   int64
 	Confidence    float64
 	Reason        string
-	PathCount     int
-	Scenarios     []detect.Scenario
+	// Detector names what produced the finding (e.g. known-location:go-caches).
+	Detector  string
+	PathCount int
+	Scenarios []detect.Scenario
 	// Missing is true when the finding's path no longer exists on disk.
 	Missing bool
 }
@@ -65,17 +67,28 @@ func Rows(opps []service.Opportunity) []Row {
 			LogicalSize:   o.Finding.LogicalSize,
 			Confidence:    o.Finding.Confidence,
 			Reason:        o.Finding.Reason,
+			Detector:      o.Finding.Entity.Detector,
 			PathCount:     len(o.Paths),
 			Scenarios:     o.Finding.Scenarios,
 			Missing:       o.Missing,
 		}
 	}
-	sort.Slice(rows, func(i, j int) bool {
+	sortRows(rows)
+	return rows
+}
+
+// sortRows orders rows by tier (most actionable first), then by
+// allocated size descending, then by path so the order is total and
+// rendering is deterministic.
+func sortRows(rows []Row) {
+	sort.SliceStable(rows, func(i, j int) bool {
 		ri, rj := tierRank(rows[i].Tier), tierRank(rows[j].Tier)
 		if ri != rj {
 			return ri < rj
 		}
-		return rows[i].AllocatedSize > rows[j].AllocatedSize
+		if rows[i].AllocatedSize != rows[j].AllocatedSize {
+			return rows[i].AllocatedSize > rows[j].AllocatedSize
+		}
+		return rows[i].Path < rows[j].Path
 	})
-	return rows
 }

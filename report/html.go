@@ -40,12 +40,44 @@ type htmlTierTotal struct {
 	Total string
 }
 
+// htmlBanner is a notice above the report (stale data, vanished paths,
+// omitted findings).
+type htmlBanner struct {
+	Class string // CSS modifier: warn or info
+	Text  string
+}
+
+// htmlMini is one row of a hotspot table.
+type htmlMini struct {
+	Size    string
+	Tier    string
+	Class   string
+	Path    string
+	FileURL template.URL
+	Missing bool
+}
+
+// htmlPair is one archive/directory comparison.
+type htmlPair struct {
+	ArchiveSize string
+	Verdict     string
+	Archive     string
+	Dir         string
+	Summary     string
+}
+
 type htmlData struct {
-	Root        string
-	GeneratedAt string
-	Rows        []htmlRow
-	TierTotals  []htmlTierTotal
-	GrandTotal  string
+	Root       string
+	MetaLine   string
+	Rows       []htmlRow
+	TierTotals []htmlTierTotal
+	GrandTotal string
+
+	// Optional sections, used by the document-based report.
+	Banners     []htmlBanner
+	Known       []htmlMini
+	Unexplained []htmlMini
+	Pairs       []htmlPair
 }
 
 // WriteHTML renders rows as a single self-contained HTML file: an
@@ -56,32 +88,14 @@ type htmlData struct {
 // and callers may want a stable timestamp for testing or reproducible
 // output.
 func WriteHTML(w io.Writer, root string, rows []Row, generatedAt time.Time) error {
-	data := htmlData{
-		Root:        root,
-		GeneratedAt: generatedAt.Format("2006-01-02 15:04:05 MST"),
-	}
+	data := htmlData{Root: root}
 
 	totals := make(map[string]int64)
 	var totalOrder []string
 	var grandTotal int64
 
 	for _, r := range rows {
-		hr := htmlRow{
-			Row:            r,
-			AllocatedHuman: humanBytes(r.AllocatedSize),
-			LogicalHuman:   humanBytes(r.LogicalSize),
-			ConfidencePct:  int(r.Confidence*100 + 0.5),
-			TierClass:      tierClass(r.Tier),
-			FileURL:        fileURL(r.Path),
-		}
-		for _, sc := range r.Scenarios {
-			hr.Scenarios = append(hr.Scenarios, htmlScenario{
-				Name:             sc.Name,
-				Description:      sc.Description,
-				ReclaimableHuman: humanBytes(sc.ReclaimableBytes),
-			})
-		}
-		data.Rows = append(data.Rows, hr)
+		data.Rows = append(data.Rows, newHTMLRow(r))
 
 		tier := string(r.Tier)
 		if _, seen := totals[tier]; !seen {
@@ -98,8 +112,29 @@ func WriteHTML(w io.Writer, root string, rows []Row, generatedAt time.Time) erro
 		})
 	}
 	data.GrandTotal = humanBytes(grandTotal)
+	data.MetaLine = fmt.Sprintf("generated %s · %d findings · %s total",
+		generatedAt.Format("2006-01-02 15:04:05 MST"), len(data.Rows), data.GrandTotal)
 
 	return htmlTemplate.Execute(w, data)
+}
+
+func newHTMLRow(r Row) htmlRow {
+	hr := htmlRow{
+		Row:            r,
+		AllocatedHuman: humanBytes(r.AllocatedSize),
+		LogicalHuman:   humanBytes(r.LogicalSize),
+		ConfidencePct:  int(r.Confidence*100 + 0.5),
+		TierClass:      tierClass(r.Tier),
+		FileURL:        fileURL(r.Path),
+	}
+	for _, sc := range r.Scenarios {
+		hr.Scenarios = append(hr.Scenarios, htmlScenario{
+			Name:             sc.Name,
+			Description:      sc.Description,
+			ReclaimableHuman: humanBytes(sc.ReclaimableBytes),
+		})
+	}
+	return hr
 }
 
 //nolint:gosec // G203: path comes from our own filesystem scan, not external/user-supplied input
@@ -157,14 +192,33 @@ var htmlTemplate = template.Must(template.New("report").Parse(`<!doctype html>
   .tier-unknown { background: #57606a; color: #fff; }
   .scenarios { margin: 0.25rem 0 0; padding-left: 1.1rem; font-size: 0.8rem; color: #777; }
   a { color: inherit; }
+  h2 { font-size: 1rem; margin: 1.5rem 0 0.4rem; }
+  .banner { border-radius: 0.4rem; padding: 0.5rem 0.75rem; margin: 0 0 0.6rem; font-size: 0.85rem; border: 1px solid rgba(128,128,128,0.4); }
+  .banner.warn { border-color: #9a6700; background: rgba(154,103,0,0.12); }
+  table.mini { width: auto; min-width: 50%; margin-bottom: 0.5rem; }
+  .gone { color: #cf222e; font-size: 0.8rem; }
 </style>
 </head>
 <body>
 <h1>DiskWise report — {{.Root}}</h1>
-<div class="meta">generated {{.GeneratedAt}} · {{len .Rows}} findings · {{.GrandTotal}} total</div>
-<div class="totals">
+<div class="meta">{{.MetaLine}}</div>
+{{range .Banners}}<div class="banner {{.Class}}">{{.Text}}</div>
+{{end}}<div class="totals">
   {{range .TierTotals}}<span class="pill"><span class="tier {{.Class}}">{{.Tier}}</span> {{.Total}}</span>{{end}}
 </div>
+{{if .Known}}<h2>Known heavy locations</h2>
+<table class="mini">
+{{range .Known}}<tr><td class="num">{{.Size}}</td><td><span class="tier {{.Class}}">{{.Tier}}</span></td><td class="path"><a href="{{.FileURL}}">{{.Path}}</a>{{if .Missing}} <span class="gone">(no longer exists)</span>{{end}}</td></tr>
+{{end}}</table>
+{{end}}{{if .Unexplained}}<h2>Large unexplained directories</h2>
+<table class="mini">
+{{range .Unexplained}}<tr><td class="num">{{.Size}}</td><td class="path"><a href="{{.FileURL}}">{{.Path}}</a></td></tr>
+{{end}}</table>
+{{end}}{{if .Pairs}}<h2>Archives beside extracted copies</h2>
+<table class="mini">
+{{range .Pairs}}<tr><td class="num">{{.ArchiveSize}}</td><td>{{.Verdict}}</td><td class="path">{{.Archive}}<br><span class="meta">beside {{.Dir}} — {{.Summary}}</span></td></tr>
+{{end}}</table>
+{{end}}<h2>All findings</h2>
 <input id="filter" type="search" placeholder="Filter by path, kind, or reason…" autofocus>
 <table id="report">
 <thead>
@@ -186,7 +240,7 @@ var htmlTemplate = template.Must(template.New("report").Parse(`<!doctype html>
   <td class="num" data-sort="{{.AllocatedSize}}">{{.AllocatedHuman}}</td>
   <td class="num" data-sort="{{.LogicalSize}}">{{.LogicalHuman}}</td>
   <td class="num" data-sort="{{.Confidence}}">{{.ConfidencePct}}%</td>
-  <td class="path"><a href="{{.FileURL}}">{{.Path}}</a>{{if gt .PathCount 1}} <span class="meta">({{.PathCount}} paths)</span>{{end}}</td>
+  <td class="path"><a href="{{.FileURL}}">{{.Path}}</a>{{if gt .PathCount 1}} <span class="meta">({{.PathCount}} paths)</span>{{end}}{{if .Missing}} <span class="gone">(no longer exists)</span>{{end}}</td>
   <td class="reason">{{.Reason}}
     {{if .Scenarios}}<ul class="scenarios">{{range .Scenarios}}<li>[{{.Name}}] {{.ReclaimableHuman}} — {{.Description}}</li>{{end}}</ul>{{end}}
   </td>
