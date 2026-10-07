@@ -33,6 +33,9 @@ func (d ArchiveInstallerDetector) Detect(ctx context.Context, db *index.DB, root
 	if err != nil {
 		return nil, fmt.Errorf("detect: archive-installer: %w", err)
 	}
+	if err := withBundleRoots(ctx, db, root, claimed); err != nil {
+		return nil, fmt.Errorf("detect: archive-installer: %w", err)
+	}
 
 	rows, err := db.FilesByExtensions(ctx, root, archiveExtCandidates)
 	if err != nil {

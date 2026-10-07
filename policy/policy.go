@@ -19,6 +19,8 @@ var managedKinds = map[entity.Kind]bool{
 	entity.KindContainer:   true,
 	entity.KindVM:          true,
 	entity.KindApplication: true,
+	// App-managed bundles hold the user's own data, not regenerable cache.
+	entity.KindManagedBundle: true,
 }
 
 // rank orders action classes from most to least aggressive, so a

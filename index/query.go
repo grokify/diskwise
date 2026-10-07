@@ -192,6 +192,49 @@ func (db *DB) FilesByExtensions(ctx context.Context, rootPath string, exts []str
 	return out, rows.Err()
 }
 
+// DirsByNameSuffixes returns directory nodes under rootPath (rootPath
+// itself included) whose name ends with one of suffixes
+// (case-insensitive, e.g. ".photoslibrary"), largest first.
+func (db *DB) DirsByNameSuffixes(ctx context.Context, rootPath string, suffixes []string) ([]NodeRow, error) {
+	if len(suffixes) == 0 {
+		return nil, nil
+	}
+	clauses := make([]string, len(suffixes))
+	args := []any{rootPath, rootPath + "/%"}
+	for i, suf := range suffixes {
+		clauses[i] = `lower(name) LIKE ? ESCAPE '\'`
+		args = append(args, "%"+escapeLike(strings.ToLower(suf)))
+	}
+
+	// Only fixed "lower(name) LIKE ?" clauses are concatenated; every
+	// value flows through args.
+	//nolint:gosec // G202: no untrusted input reaches the query text
+	query := `SELECT ` + nodeRowColumns + ` FROM nodes
+		WHERE (path = ? OR path LIKE ?) AND kind = 'dir' AND (` + strings.Join(clauses, " OR ") + `)
+		ORDER BY subtree_allocated DESC`
+
+	rows, err := db.conn.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("index: dirs by suffix under %s: %w", rootPath, err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var out []NodeRow
+	for rows.Next() {
+		n, err := scanNodeRow(rows)
+		if err != nil {
+			return nil, fmt.Errorf("index: dirs by suffix under %s: %w", rootPath, err)
+		}
+		out = append(out, n)
+	}
+	return out, rows.Err()
+}
+
+// escapeLike escapes LIKE wildcards in s for use with ESCAPE '\'.
+func escapeLike(s string) string {
+	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
+}
+
 // ScanRunByID returns the scan_runs row for id.
 func (db *DB) ScanRunByID(ctx context.Context, id int64) (ScanRun, error) {
 	var run ScanRun

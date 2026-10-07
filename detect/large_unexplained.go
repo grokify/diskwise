@@ -44,6 +44,9 @@ func (d LargeUnexplainedDetector) Detect(ctx context.Context, db *index.DB, root
 	if err != nil {
 		return nil, fmt.Errorf("detect: large-unexplained: %w", err)
 	}
+	if err := withBundleRoots(ctx, db, root, claimed); err != nil {
+		return nil, fmt.Errorf("detect: large-unexplained: %w", err)
+	}
 
 	limit := d.Limit
 	if limit <= 0 {

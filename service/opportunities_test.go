@@ -283,3 +283,41 @@ func TestSavingsByTier_ReclaimableExcludesKeepAndUnknown(t *testing.T) {
 		t.Errorf("Reclaimable() = %d, want %d", got, want)
 	}
 }
+
+// A managed bundle is explained as KEEP, and the directory that merely
+// contains it is not also charged for the bundle's bytes.
+func TestService_Opportunities_ManagedBundleIsKeepAndNotDoubleCounted(t *testing.T) {
+	root := t.TempDir()
+	parent := filepath.Join(root, "Pictures")
+	lib := filepath.Join(parent, "Photos Library.photoslibrary")
+	if err := os.MkdirAll(filepath.Join(lib, "originals"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(lib, "originals", "a.jpeg"), 5_000_000)
+	writeFile(t, filepath.Join(parent, "loose.bin"), 3_000_000)
+
+	svc := newTestService(t).WithRegistry(fixtureRegistry(filepath.Join(root, "nothing")))
+	ctx := context.Background()
+	if _, err := svc.Scan(ctx, ScanRequest{Root: root}); err != nil {
+		t.Fatal(err)
+	}
+	opps, err := svc.Opportunities(ctx, OpportunityQuery{Path: root, MinUnexplainedSize: 1_000_000})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var gotKeep bool
+	for _, o := range opps {
+		switch o.Finding.Path {
+		case lib:
+			gotKeep = o.Finding.ActionClass == policy.Keep
+		case parent:
+			if o.Finding.AllocatedSize >= 5_000_000 {
+				t.Errorf("parent reports %d bytes, still including the bundle's 5 MB", o.Finding.AllocatedSize)
+			}
+		}
+	}
+	if !gotKeep {
+		t.Error("missing KEEP finding for the Photos library")
+	}
+}

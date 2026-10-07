@@ -33,7 +33,7 @@ type Opportunity struct {
 	Paths   []string
 }
 
-// Opportunities runs every Phase 3 detector under q.Path and returns
+// Opportunities runs every detector under q.Path and returns
 // the findings matching q, each rolled up to its actionable paths.
 // Each byte is reported by exactly one detector: KnownLocationDetector
 // owns its registry paths; ArchiveInstallerDetector and
@@ -51,6 +51,7 @@ func (s *Service) Opportunities(ctx context.Context, q OpportunityQuery) ([]Oppo
 	// report.
 	detectors := []detect.Detector{
 		detect.KnownLocationDetector{Registry: s.registry},
+		detect.ManagedBundleDetector{Registry: s.registry},
 		detect.ArchiveInstallerDetector{Registry: s.registry},
 		detect.ArtifactFamilyDetector{Registry: s.registry},
 	}

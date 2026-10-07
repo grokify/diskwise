@@ -16,5 +16,9 @@ const (
 	KindModel          Kind = "model"
 	KindProject        Kind = "project"
 	KindBackup         Kind = "backup"
-	KindUnknown        Kind = "unknown"
+	// KindManagedBundle is an app-managed package directory (a Photos
+	// library, a Logic project): live user data whose internals belong
+	// to the app that owns it, not to a cleanup tool.
+	KindManagedBundle Kind = "managed_bundle"
+	KindUnknown       Kind = "unknown"
 )

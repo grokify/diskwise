@@ -41,6 +41,13 @@ func (s *Service) Hotspots(ctx context.Context, q HotspotsQuery) (*HotspotsRepor
 	if err != nil {
 		return nil, fmt.Errorf("service: hotspots %s: %w", q.Path, err)
 	}
+	// App-managed bundles (Photos libraries and the like) are recognized
+	// heavy locations too.
+	bundles, err := (detect.ManagedBundleDetector{Registry: s.registry}).Detect(ctx, s.db, q.Path)
+	if err != nil {
+		return nil, fmt.Errorf("service: hotspots %s: %w", q.Path, err)
+	}
+	known = append(known, bundles...)
 	sort.Slice(known, func(i, j int) bool { return known[i].AllocatedSize > known[j].AllocatedSize })
 
 	unexplainedDetector := detect.LargeUnexplainedDetector{Registry: s.registry, MinSize: q.MinSize, Limit: q.Limit}

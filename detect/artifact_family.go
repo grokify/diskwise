@@ -29,6 +29,9 @@ func (d ArtifactFamilyDetector) Detect(ctx context.Context, db *index.DB, root s
 	if err != nil {
 		return nil, fmt.Errorf("detect: artifact-family: %w", err)
 	}
+	if err := withBundleRoots(ctx, db, root, claimed); err != nil {
+		return nil, fmt.Errorf("detect: artifact-family: %w", err)
+	}
 
 	rows, err := db.FilesByExtensions(ctx, root, archiveExtCandidates)
 	if err != nil {
