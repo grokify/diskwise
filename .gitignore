@@ -11,3 +11,6 @@ IDEATION_CHAT*.md
 # committed, and may contain real local filesystem paths.
 /diskwise-report.*
 /diskwise-insights.*
+
+# MkDocs build output
+site/
