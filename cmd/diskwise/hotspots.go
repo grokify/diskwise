@@ -35,6 +35,13 @@ func newHotspotsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rd, err := redactorFor(cmd)
+			if err != nil {
+				return err
+			}
+			if rd != nil {
+				report = rd.Hotspots(report)
+			}
 
 			asJSON, _ := cmd.Flags().GetBool("json")
 			if asJSON {
@@ -63,5 +70,6 @@ func newHotspotsCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&minSizeFlag, "min-size", "", "hide unexplained entries below this size (default: 1gb)")
 	cmd.Flags().IntVar(&limit, "limit", 0, "maximum unexplained entries to show (default: 20)")
+	addRedactFlags(cmd)
 	return cmd
 }

@@ -39,6 +39,13 @@ func newOpportunitiesCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rd, err := redactorFor(cmd)
+			if err != nil {
+				return err
+			}
+			if rd != nil {
+				opps = rd.Opportunities(opps)
+			}
 
 			asJSON, _ := cmd.Flags().GetBool("json")
 			if asJSON {
@@ -80,5 +87,6 @@ func newOpportunitiesCmd() *cobra.Command {
 	cmd.Flags().Float64Var(&minConfidence, "min-confidence", 0, "hide findings below this detection confidence (0-1)")
 	cmd.Flags().StringVar(&typeFlag, "type", "", "filter to one entity kind (cache, archive, artifact_family, ...)")
 	cmd.Flags().BoolVar(&pathsOnly, "paths", false, "print one actionable path per line instead of a table")
+	addRedactFlags(cmd)
 	return cmd
 }

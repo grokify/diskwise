@@ -38,6 +38,14 @@ func newReportCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rd, err := redactorFor(cmd)
+			if err != nil {
+				return err
+			}
+			if rd != nil {
+				opps = rd.Opportunities(opps)
+				path = rd.Path(path)
+			}
 			rows := report.Rows(opps)
 
 			f, err := os.Create(out)
@@ -64,5 +72,6 @@ func newReportCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&format, "format", "html", "report format: html or xlsx")
 	cmd.Flags().StringVar(&out, "out", "", "output file path (default: diskwise-report.<format>)")
+	addRedactFlags(cmd)
 	return cmd
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/grokify/diskwise/index"
+	"github.com/grokify/diskwise/redact"
 )
 
 // defaultDBPath returns the standard per-user location for the
@@ -141,4 +142,26 @@ func parseSize(s string) (int64, error) {
 		return 0, fmt.Errorf("invalid size %q", s)
 	}
 	return n, nil
+}
+
+// addRedactFlags registers --redact and --redact-prefix on a command
+// that prints paths.
+func addRedactFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("redact", false, "abbreviate the home directory to ~ in output (for sharing)")
+	cmd.Flags().StringSlice("redact-prefix", nil, "fully redact every path under this prefix (repeatable; implies --redact)")
+}
+
+// redactorFor returns the Redactor the command's flags ask for, or nil
+// when output should be left as-is.
+func redactorFor(cmd *cobra.Command) (*redact.Redactor, error) {
+	on, _ := cmd.Flags().GetBool("redact")
+	prefixes, _ := cmd.Flags().GetStringSlice("redact-prefix")
+	if !on && len(prefixes) == 0 {
+		return nil, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("determine home directory for --redact: %w", err)
+	}
+	return redact.New(home, prefixes), nil
 }

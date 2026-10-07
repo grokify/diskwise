@@ -44,6 +44,13 @@ func newSavingsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rd, err := redactorFor(cmd)
+			if err != nil {
+				return err
+			}
+			if rd != nil {
+				savings = rd.Savings(savings)
+			}
 
 			asJSON, _ := cmd.Flags().GetBool("json")
 			if asJSON {
@@ -76,6 +83,7 @@ func newSavingsCmd() *cobra.Command {
 			return nil
 		},
 	}
+	addRedactFlags(cmd)
 	return cmd
 }
 
