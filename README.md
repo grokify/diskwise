@@ -4,6 +4,7 @@
 [![Go Lint][go-lint-svg]][go-lint-url]
 [![Go SAST][go-sast-svg]][go-sast-url]
 [![Docs][docs-godoc-svg]][docs-godoc-url]
+[![Docs][docs-mkdoc-svg]][docs-mkdoc-url]
 [![Visualization][viz-svg]][viz-url]
 [![License][license-svg]][license-url]
 
@@ -15,7 +16,7 @@
  [go-sast-url]: https://github.com/grokify/diskwise/actions/workflows/go-sast-codeql.yaml
  [docs-godoc-svg]: https://pkg.go.dev/badge/github.com/grokify/diskwise
  [docs-godoc-url]: https://pkg.go.dev/github.com/grokify/diskwise
- [docs-mkdoc-svg]: https://img.shields.io/badge/Go-dev%20guide-blue.svg
+ [docs-mkdoc-svg]: https://img.shields.io/badge/docs-user%20guide-blue.svg
  [docs-mkdoc-url]: https://grokify.github.io/diskwise
  [viz-svg]: https://img.shields.io/badge/visualizaton-Go-blue.svg
  [viz-url]: https://mango-dune-07a8b7110.1.azurestaticapps.net/?repo=grokify%2Fdiskwise
@@ -35,21 +36,38 @@ and risk, rolled up into a directly actionable, manual-deletion worklist.
 V1 is discovery-only: DiskWise identifies and explains reclaimable
 storage; it does not delete anything.
 
-See [`docs/specs/PRD.md`](docs/specs/PRD.md) for the product definition,
-[`docs/specs/TRD.md`](docs/specs/TRD.md) for the architecture, and
-[`docs/specs/PLAN.md`](docs/specs/PLAN.md) / [`docs/specs/ROADMAP.md`](docs/specs/ROADMAP.md)
-for the implementation sequence.
+## Documentation
+
+The full **[user guide](https://grokify.github.io/diskwise)** covers
+installation, every command, how findings are classified, and
+troubleshooting. Project documents live in this repo:
+
+- [`docs/guides/`](docs/guides/) — user guide (source of the site)
+- [`docs/specs/PRD.md`](docs/specs/PRD.md) — product definition
+- [`docs/specs/TRD.md`](docs/specs/TRD.md) — architecture
+- [`docs/specs/PLAN.md`](docs/specs/PLAN.md) / [`docs/specs/ROADMAP.md`](docs/specs/ROADMAP.md) — implementation sequence
+- [`docs/releases/`](docs/releases/) — per-version release notes
 
 ## Status
 
-**v0.1.0** — Phases 1–3 and 6 of the roadmap are implemented: the
-scanner, SQLite index, knowledge registry, detectors, policy engine,
-report/insights output formats, and the `diskwise` CLI. The MCP server
-(`cmd/diskwise-mcp`) is a skeleton with no tools registered yet (Phase
-4–5, still planned). See
-[`docs/releases/v0.1.0.md`](docs/releases/v0.1.0.md) for the full
-release notes and [`CHANGELOG.md`](CHANGELOG.md) for the commit-level
-history.
+**v0.1.0** is released: the scanner, SQLite index, knowledge registry,
+detectors, policy engine, report/insights output formats, and the `diskwise`
+CLI (roadmap Phases 1–3 and 6). Since then, on `main` and not yet released
+(Phases 7–8):
+
+- Totals that add up: unexplained directories are disjoint, bytes another
+  finding already reports are excluded, and `savings` no longer counts the
+  `unknown` tier as savings.
+- App-managed bundles (e.g. Photos libraries) classified as `keep`.
+- `pairs` compares archives with their extracted copies; `preflight` checks
+  free space for an OS upgrade; `review` and `export` produce a checkbox
+  worklist and a consistent set of JSON files; `--redact` /
+  `--redact-prefix` make output safe to share.
+
+The MCP server (`cmd/diskwise-mcp`) is a skeleton with no tools registered
+yet (Phases 4–5, still planned). See
+[`docs/releases/v0.1.0.md`](docs/releases/v0.1.0.md) and
+[`CHANGELOG.md`](CHANGELOG.md) for history.
 
 ## Install
 
@@ -57,60 +75,20 @@ history.
 go install github.com/grokify/diskwise/cmd/diskwise@latest
 ```
 
-## Components
+macOS only. Run it from Terminal or iTerm, and grant that terminal Full Disk
+Access (System Settings > Privacy & Security) for a complete scan. See the
+[installation guide](docs/guides/installation.md).
 
-- `github.com/grokify/diskwise` — Go library (scanner, detectors,
-  policy engine, service layer)
-- `cmd/diskwise` — Cobra CLI
-- `cmd/diskwise-mcp` — MCP server skeleton ([modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk)); not yet wired to any tools
-
-## User Guide
-
-DiskWise works in two steps: **scan** a directory into a local SQLite
-index, then **query** that index as many times as you like without
-re-walking the filesystem. Scanning is read-only — DiskWise never
-deletes, moves, or modifies anything it finds.
-
-### 1. Scan a directory
+## Quick start
 
 ```bash
-diskwise scan ~
+diskwise scan ~                      # measure (read-only); the result is kept in a local index
+diskwise hotspots ~                  # known heavy locations + large unexplained directories
+diskwise savings ~                   # what could be reclaimed, by risk tier
+diskwise review ~ --out review.md    # checkbox worklist to work through yourself
 ```
 
-This walks the tree concurrently, records logical and allocated
-(on-disk) byte sizes for every file and directory, and shows a live
-progress meter in the terminal. The index defaults to
-`~/Library/Application Support/DiskWise/index.db`; pass `--db path/to.db`
-to use a different one. Re-walk just one subtree later with:
-
-```bash
-diskwise rescan ~/Downloads
-```
-
-**Permissions.** macOS attributes file access to the app that launched
-the scan, so run it from Terminal (or iTerm) rather than from another
-app's embedded terminal — otherwise that app receives the Photos,
-Desktop and Documents permission prompts. For a complete scan, grant
-your terminal Full Disk Access (System Settings > Privacy & Security).
-The scan summary lists any directories it could not read; `sudo` does
-not bypass these macOS privacy protections.
-
-### 2. See what's using space
-
-```bash
-diskwise summary ~        # aggregate stats for a scanned path
-diskwise tree ~           # subtree totals, sorted by size
-diskwise largest ~        # largest individual files/directories
-diskwise hotspots ~       # known heavy-storage hits + large unexplained dirs
-```
-
-### 3. Find reclaimable space
-
-```bash
-diskwise savings ~
-```
-
-```
+```text
 Potential savings under /Users/you: 335.1 GiB
 (excludes KEEP and UNKNOWN; UNKNOWN is unexplained large directories, not a savings estimate)
 
@@ -121,90 +99,37 @@ Potential savings under /Users/you: 335.1 GiB
   UNKNOWN              790.0 GiB
 ```
 
-Tiers, most-actionable first:
+DiskWise never deletes, moves, or modifies anything it finds. It produces an
+explained worklist; you act on it.
 
-| Tier | Meaning |
-|------|---------|
-| `safe_delete` | High-confidence regeneratable data (build caches, package-manager caches) |
-| `likely_safe` | Probably safe, lower confidence (e.g. an extraction sibling exists) |
-| `backup_then_delete` | Managed data (databases, containers, VMs, apps) — never auto-promoted higher, regardless of confidence |
-| `review` | Needs a human look before acting |
-| `keep` | Explained but not for removal here — e.g. an app-managed bundle such as a Photos library |
-| `unknown` | Large directories no detector explains (outermost only; bytes other findings already report are excluded) |
+## Commands
 
-Drill into one tier, or one entity kind, or filter by confidence:
+| Command | Purpose |
+|---|---|
+| `scan`, `rescan` | Measure a directory into the index; re-measure one subtree |
+| `summary`, `tree`, `largest` | Browse sizes from the index |
+| `hotspots` | Known heavy locations and large unexplained directories |
+| `savings`, `opportunities` | Reclaimable space by tier; the full findings list with filters |
+| `pairs` | Compare archives with the extracted directories beside them |
+| `preflight` | Check free space against a requirement (e.g. `--need 50gib`) |
+| `review`, `report`, `export` | Checklist, HTML/XLSX report, or a set of JSON files |
+| `insights` | Render a narrative savings write-up from a JSON document |
 
-```bash
-diskwise opportunities ~ --action safe_delete
-diskwise opportunities ~ --type artifact_family     # repeated downloaded versions
-diskwise opportunities ~ --min-confidence 0.8
-diskwise opportunities ~ --paths | xargs -I{} du -sh {}   # pipe actionable paths elsewhere
-```
+Every command accepts `--json`. See the
+[CLI reference](docs/guides/cli-reference.md) for all flags, and
+[JSON output](docs/guides/json-output.md) for the shapes.
 
-Every command accepts `--json` for scripting instead of the
-human-readable table.
+## Components
 
-### 4. Check an upgrade's space requirement
+- `github.com/grokify/diskwise` — Go library (scanner, detectors,
+  policy engine, service layer)
+- `cmd/diskwise` — Cobra CLI
+- `cmd/diskwise-mcp` — MCP server skeleton ([modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk)); not yet wired to any tools
 
-```bash
-diskwise preflight --need 50gib
-```
-
-Reports capacity, available space, the APFS container's free space and
-Time Machine local snapshots, and exits non-zero when the volume is short,
-so it can gate a script. Purgeable space is not measurable from the
-command line and is not counted.
-
-### 5. Compare archives with their extracted copies
-
-```bash
-diskwise pairs ~/Downloads
-```
-
-For each archive (`.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.zip`) beside a
-directory of the same name, compares file counts and bytes and reports
-`same`, `same_count`, `archive_has_more` or `dir_has_more`. Nothing is
-extracted and contents are not hashed, so `same` is strong evidence, not
-proof. For a Photos library only original media is compared, since its
-internal layout changes between app versions.
-
-### 6. Generate a shareable report
-
-```bash
-diskwise report ~ --format html --out report.html    # self-contained, sortable/filterable
-diskwise report ~ --format xlsx --out report.xlsx     # frozen header, autofilter
-diskwise review ~ --out review.md                    # checkbox worklist grouped by tier
-diskwise export ~ --out ./diskwise-export             # savings/opportunities/hotspots JSON + review.md
-```
-
-`review` writes a Markdown checklist (deterministic, no timestamps) you
-tick through and act on yourself — DiskWise never deletes anything.
-`export` writes a consistent set of files, each recording the root it was
-computed for; add `--pairs` to include archive comparisons.
-
-**Sharing safely.** `opportunities`, `hotspots`, `savings`, `pairs`,
-`report`, `review` and `export` accept `--redact` (home directory shown as
-`~`) and `--redact-prefix PATH` (repeatable): everything under a prefix is
-replaced with a stable opaque token like `<redacted:1a2b3c4d>`, including
-names and descriptions derived from those paths.
-
-### 7. Narrative analysis (insights)
-
-DiskWise's detectors are deliberately conservative — they never guess.
-Patterns like "this is a duplicate 2022 migration backup" or "this
-archive is byte-identical to that other file" require judgment an LLM
-agent can supply after reading DiskWise's raw output. `insights` gives
-that agent a typed contract to write its analysis into, and turns it
-back into a document deterministically:
-
-```bash
-diskwise insights schema                                  # the JSON Schema contract for an agent to fill out
-diskwise insights render insights.json --format md  --out insights.md
-diskwise insights render insights.json --format html --out insights.html
-```
-
-Re-running `render` never re-derives the analysis — it's a pure
-function of the JSON document.
+Detectors propose and the policy engine decides: a proposal can only be made
+more conservative, never less, and managed data (databases, containers, VMs,
+installed apps, app-managed bundles) can never be called safe to delete. See
+[How DiskWise Thinks](docs/guides/concepts.md).
 
 ## Development
 
@@ -212,6 +137,13 @@ function of the JSON document.
 go build ./...
 go test ./...
 golangci-lint run
+```
+
+Preview the documentation site locally:
+
+```bash
+pip install mkdocs-material
+mkdocs serve
 ```
 
 ## Release History
