@@ -235,6 +235,29 @@ func escapeLike(s string) string {
 	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
 }
 
+// FileTotals counts the regular files under dirPath and sums their
+// logical sizes. If infixes is non-empty, only files whose path (below
+// dirPath) contains one of them are counted — e.g. ".photoslibrary/originals/"
+// to count a Photos library's original media only.
+func (db *DB) FileTotals(ctx context.Context, dirPath string, infixes []string) (files, logicalBytes int64, err error) {
+	query := `SELECT COUNT(*), COALESCE(SUM(logical_size), 0) FROM nodes WHERE kind = 'file' AND path LIKE ? ESCAPE '\'`
+	args := []any{escapeLike(dirPath) + "/%"}
+	if len(infixes) > 0 {
+		clauses := make([]string, len(infixes))
+		for i, in := range infixes {
+			clauses[i] = `path LIKE ? ESCAPE '\'`
+			args = append(args, escapeLike(dirPath)+"/%"+escapeLike(in)+"%")
+		}
+		// Fixed clauses only; every value flows through args.
+		//nolint:gosec // G202: no untrusted input reaches the query text
+		query += ` AND (` + strings.Join(clauses, " OR ") + `)`
+	}
+	if err := db.conn.QueryRowContext(ctx, query, args...).Scan(&files, &logicalBytes); err != nil {
+		return 0, 0, fmt.Errorf("index: file totals under %s: %w", dirPath, err)
+	}
+	return files, logicalBytes, nil
+}
+
 // ScanRunByID returns the scan_runs row for id.
 func (db *DB) ScanRunByID(ctx context.Context, id int64) (ScanRun, error) {
 	var run ScanRun

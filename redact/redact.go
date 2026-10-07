@@ -186,3 +186,25 @@ func (r *Redactor) Hotspots(rep *service.HotspotsReport) *service.HotspotsReport
 func (r *Redactor) Savings(s *service.SavingsByTier) *service.SavingsByTier {
 	return &service.SavingsByTier{Path: r.Path(s.Path), Tiers: s.Tiers}
 }
+
+// Pairs returns redacted copies of pairs. A pair is redacted as a
+// whole when its archive or directory is under a deny prefix.
+func (r *Redactor) Pairs(pairs []detect.ArchivePair) []detect.ArchivePair {
+	out := make([]detect.ArchivePair, len(pairs))
+	for i, p := range pairs {
+		scrub := []string(nil)
+		if r.denied(p.Archive) || r.denied(p.Dir) {
+			for _, x := range []string{p.Archive, p.Dir} {
+				scrub = append(scrub, x)
+				if b := filepath.Base(x); len(b) >= 3 {
+					scrub = append(scrub, b)
+				}
+			}
+			sort.Slice(scrub, func(i, j int) bool { return len(scrub[i]) > len(scrub[j]) })
+		}
+		p.Detail = r.text(p.Detail, scrub)
+		p.Archive, p.Dir = r.Path(p.Archive), r.Path(p.Dir)
+		out[i] = p
+	}
+	return out
+}

@@ -24,7 +24,7 @@ const minFamilyMembers = 2
 var archiveExtCandidates = []string{
 	".dmg", ".pkg", ".xip", ".iso", ".ipsw",
 	".zip", ".7z", ".rar",
-	".gz", ".bz2", ".xz", ".zst",
+	".tar", ".gz", ".bz2", ".xz", ".zst",
 	".tgz", ".tbz2", ".txz",
 }
 
@@ -34,7 +34,7 @@ var archiveSuffixes = []string{
 	".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst",
 	".tgz", ".tbz2", ".txz",
 	".zip", ".7z", ".rar", ".dmg", ".pkg", ".xip", ".iso", ".ipsw",
-	".gz", ".bz2", ".xz", ".zst",
+	".tar", ".gz", ".bz2", ".xz", ".zst",
 }
 
 // stripArchiveSuffix removes a recognized archive/installer extension

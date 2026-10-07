@@ -42,6 +42,7 @@ func newRootCmd() *cobra.Command {
 		newOpportunitiesCmd(),
 		newSavingsCmd(),
 		newPreflightCmd(),
+		newPairsCmd(),
 		newReportCmd(),
 		newInsightsCmd(),
 	)

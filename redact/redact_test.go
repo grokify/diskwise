@@ -95,3 +95,26 @@ func TestHotspotsAndOpportunities(t *testing.T) {
 		t.Errorf("hotspots not redacted: %+v", rep)
 	}
 }
+
+func TestPairs(t *testing.T) {
+	r := New(home, []string{"~/work"})
+	in := []detect.ArchivePair{{
+		Archive: "/Users/example/work/payroll.tar", Dir: "/Users/example/work/payroll",
+		Detail: "read /Users/example/work/payroll.tar: unexpected EOF",
+	}, {
+		Archive: "/Users/example/Downloads/x.tar", Dir: "/Users/example/Downloads/x",
+	}}
+	got := r.Pairs(in)
+	blob := got[0].Archive + got[0].Dir + got[0].Detail
+	for _, leak := range []string{"payroll", "work", "example"} {
+		if strings.Contains(blob, leak) {
+			t.Errorf("redacted pair still contains %q: %s", leak, blob)
+		}
+	}
+	if got[1].Archive != "~/Downloads/x.tar" || got[1].Dir != "~/Downloads/x" {
+		t.Errorf("home-only pair = %+v", got[1])
+	}
+	if in[0].Archive != "/Users/example/work/payroll.tar" {
+		t.Error("Pairs must not mutate its input")
+	}
+}

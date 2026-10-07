@@ -307,3 +307,30 @@ func TestService_Summary_IncludesKnownLocations(t *testing.T) {
 		t.Errorf("KnownLocations = %v, want one finding for %s", summary.KnownLocations, cache)
 	}
 }
+
+func TestService_ArchivePairs(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "Stuff")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir, "a.bin"), 1000)
+	writeFile(t, filepath.Join(root, "Stuff.zip"), 10) // not a real zip: reported as unreadable, not dropped
+
+	svc := newTestService(t)
+	ctx := context.Background()
+	if _, err := svc.Scan(ctx, ScanRequest{Root: root}); err != nil {
+		t.Fatal(err)
+	}
+	pairs, err := svc.ArchivePairs(ctx, ArchivePairQuery{Path: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pairs) != 1 || pairs[0].Dir != dir {
+		t.Fatalf("pairs = %+v, want one pair for %s", pairs, dir)
+	}
+
+	if _, err := svc.ArchivePairs(ctx, ArchivePairQuery{Path: "/nowhere"}); err == nil {
+		t.Error("expected an error for an unindexed path")
+	}
+}
