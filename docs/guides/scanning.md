@@ -61,6 +61,8 @@ inside something you have scanned, so you can scan `~` once and ask about
 `~/Downloads` later. If a path has never been scanned, DiskWise says so and
 tells you which `scan` command to run.
 
-!!! note "A stale index"
-    The index is a snapshot. It does not watch the filesystem, so rescan
-    after large changes. Query output always names the path it covers.
+!!! note "The index is a snapshot"
+    It does not watch the filesystem, so rescan after large changes. Results
+    show **when they were measured**, warn when the scan is over a week old, and
+    mark findings whose paths no longer exist as `[missing]`. A path that still
+    exists but changed size is not detected until you rescan it.

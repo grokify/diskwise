@@ -37,10 +37,22 @@ Terminal.app or iTerm instead of another app's embedded terminal, and grant
 that terminal Full Disk Access once. See
 [Installation](installation.md#give-your-terminal-full-disk-access).
 
-## The numbers changed after I cleaned up
+## Findings are marked `[missing]`, or DiskWise warns the scan is old
 
-The index is a snapshot. Run `diskwise rescan <path>` on what you changed (or
-`scan` again), then re-run `savings`.
+The index is a snapshot taken when you scanned. DiskWise compares each finding
+with the disk and marks ones whose paths have since been removed (for example a
+cache you cleaned) as `[missing]`, warns on stderr, and still counts them in
+tier totals because the totals describe the index. `savings` also reports how
+many bytes that is. Run `diskwise rescan <parent path>` to refresh.
+
+Every result states when it was measured, and warns once the scan is over a
+week old. A path that still exists but has changed size is *not* detected, so
+rescan after cleaning up and then re-run `savings`.
+
+## `review` or `export` leaves out small findings
+
+Findings under `--min-size` (default `1mb`) are omitted, and the output says how
+many and how much. Use `--min-size 0` to list everything.
 
 ## `UNKNOWN` is huge
 

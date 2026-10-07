@@ -9,7 +9,7 @@ field names (`PascalCase`), sizes are in **bytes**, and times are RFC 3339.
 
     ```bash
     diskwise opportunities ~ --action safe_delete --json \
-      | jq -r '.[:5][] | "\(.Finding.AllocatedSize)\t\(.Finding.Path)"'
+      | jq -r '.Opportunities[:5][] | "\(.Finding.AllocatedSize)\t\(.Finding.Path)"'
     ```
 
 ## Finding
@@ -53,16 +53,47 @@ The unit behind `opportunities`, `hotspots`, and the review list:
 | `summary` | `{Path, Kind, LogicalSize, AllocatedSize, State, ScanRun, KnownLocations, Volume}` |
 | `tree` | Nested `{Path, Name, Kind, LogicalSize, AllocatedSize, State, Children}` |
 | `largest` | Array of `{Path, Name, Kind, LogicalSize, AllocatedSize}` |
-| `hotspots` | `{"Root", "Known": [Finding], "Unexplained": [Finding]}` |
-| `savings` | `{"Path", "Tiers": {"safe_delete": bytes, ...}}` |
-| `opportunities` | Array of `{"Finding": Finding, "Paths": [rolled-up actionable paths]}` |
+| `hotspots` | `{Root, ScannedAt, ScanStatus, Stale, Known: [Finding], Unexplained: [Finding], MissingKnown}` |
+| `savings` | `{Path, Tiers: {"safe_delete": bytes, ...}, ScannedAt, ScanStatus, Stale, MissingCount, MissingBytes}` |
+| `opportunities` | The [opportunities report](#opportunities-report) below |
 | `pairs` | Array of archive pairs, below |
 | `preflight` | Preflight result, below |
 
-`opportunities --json` is a **bare array**. The files written by
-[`export`](sharing.md#export-everything-at-once) wrap it as
-`{"Root": ..., "Opportunities": [...]}` so each file records what it was
-computed for.
+## Opportunities report
+
+`opportunities --json` and the `opportunities.json` file written by
+[`export`](sharing.md#export-everything-at-once) are the same shape:
+
+```json
+{
+  "Root": "/Users/you",
+  "ScannedAt": "2026-10-07T18:22:00Z",
+  "ScanStatus": "complete",
+  "Stale": false,
+  "MinSize": 1048576,
+  "OmittedCount": 14320,
+  "OmittedBytes": 1288490188,
+  "MissingCount": 0,
+  "Opportunities": [
+    { "Finding": { "...": "see Finding above" }, "Paths": ["..."], "Missing": false }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `Root` | The path the report was computed for. |
+| `ScannedAt`, `ScanStatus`, `Stale` | When the covering scan finished (UTC), whether it was `complete` or `partial`, and whether it is over a week old. |
+| `MinSize`, `OmittedCount`, `OmittedBytes` | The `--min-size` cut and what it removed, so a filtered list never hides its size. Omitted when no cut was applied. |
+| `MissingCount` | Findings whose paths no longer exist on disk. |
+| `Opportunities[].Paths` | Rolled-up actionable paths. |
+| `Opportunities[].Missing` | `true` when a path of the finding no longer exists: the index predates its removal. Totals still count it. |
+
+`Opportunities` is always an array (`[]` when empty), never `null`.
+
+!!! note "Changed in v0.2.0"
+    Earlier versions printed a bare array from `opportunities --json`. Scripts
+    that iterate `.[]` should iterate `.Opportunities[]`.
 
 ## Archive pair
 

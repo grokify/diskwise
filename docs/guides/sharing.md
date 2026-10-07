@@ -14,8 +14,14 @@ A Markdown checklist grouped by tier, most actionable first. Every finding
 is an unticked checkbox with its size, kind, path, and reason. Tick what you
 want removed and act on it yourself.
 
-The output contains **no timestamps**, so regenerating it after a rescan
-gives a clean diff and is safe to keep under version control.
+The document states **when the data was measured** and flags a stale scan.
+Findings whose paths no longer exist are marked _(no longer exists)_. Findings
+smaller than `--min-size` (default `1mb`) are left out, and the document says
+how many and how much; use `--min-size 0` to list everything.
+
+The only time shown is the scan time recorded in the index, never the clock,
+so regenerating after a rescan gives a clean diff and the file is safe to keep
+under version control.
 
 ## HTML and spreadsheet reports
 
@@ -39,14 +45,16 @@ Writes these files into the directory:
 | File | Contents |
 |---|---|
 | `savings.json` | Savings by tier |
-| `opportunities.json` | Every finding, as `{"Root": ..., "Opportunities": [...]}` |
+| `opportunities.json` | The [opportunities report](json-output.md#opportunities-report): findings plus root, scan time, and what `--min-size` omitted |
 | `hotspots.json` | Known locations and large unexplained directories |
 | `review.md` | The checklist above |
 | `pairs.json` | Archive comparisons (with `--pairs`) |
 
 Every JSON file records the root it was computed for, so output generated for
-the wrong directory is recognizable. See [JSON Output](json-output.md).
-Existing files in the directory are overwritten.
+the wrong directory is recognizable. `--min-size` (default `1mb`) applies to
+`opportunities.json` and `review.md`, and both record what it omitted; savings
+totals always include everything. See [JSON Output](json-output.md). Existing
+files in the directory are overwritten.
 
 ## Sharing safely
 

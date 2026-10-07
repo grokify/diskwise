@@ -44,6 +44,9 @@ diskwise opportunities ~ --paths                     # just the actionable paths
 Entity kinds include `cache`, `archive`, `artifact_family`, `model`,
 `container`, `application`, `managed_bundle`, and `unknown`.
 
+`opportunities` lists every finding by default. `--min-size 1mb` hides the small
+ones and says how many it hid.
+
 Output is rolled up to the **highest fully-covered directory**: if every item
 in a folder is part of a finding, you get one path to remove instead of a
 scattered file list. A folder that is only partly covered stays decomposed
@@ -66,12 +69,15 @@ classified by evidence:
 | Evidence | Tier | Confidence |
 |---|---|---|
 | A newer `.app` with a matching name is installed | `safe_delete` | 0.9 |
-| A directory with the same name sits beside it | `likely_safe` | 0.7 |
+| A same-named directory sits beside it, and (plain tar or zip) holds the archive's files | `likely_safe` | 0.75 |
+| A same-named directory sits beside it (archive not compared: compressed or unreadable) | `likely_safe` | 0.7 |
+| A same-named directory exists, but the archive lists files it lacks, or sizes differ | `review` | 0.3 to 0.4 |
 | Name looks like a deliberate backup or export | `review` | 0.2 |
 | No evidence either way | `review` | 0.3 |
 
-For a closer check of the "sits beside an extracted copy" case, use
-[`pairs`](archive-pairs.md).
+A same-named directory is only a hint, so for plain tar and zip DiskWise checks
+the archive against it before trusting the name. For the full comparison,
+including compressed archives, use [`pairs`](archive-pairs.md).
 
 ### Artifact families
 

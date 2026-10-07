@@ -37,7 +37,7 @@ on stderr when they do.
 | Command | Purpose |
 |---|---|
 | `savings [path]` | Potential savings by tier. Redaction flags. |
-| `opportunities [path]` | Every finding, grouped by tier. Flags: `--action TIER`, `--type KIND`, `--min-confidence 0-1`, `--paths`, redaction flags. |
+| `opportunities [path]` | Every finding, grouped by tier. Flags: `--action TIER`, `--type KIND`, `--min-confidence 0-1`, `--min-size SIZE` (default: no cut), `--paths`, redaction flags. `--json` prints the [opportunities report](json-output.md#opportunities-report). |
 | `pairs [path]` | Compare archives with extracted directories beside them. Flags: `--min-size` (default `10mb`), `--max-compressed` (default `8gib`, `0` = no cap), redaction flags. |
 
 ## Preparing and sharing
@@ -45,9 +45,9 @@ on stderr when they do.
 | Command | Purpose |
 |---|---|
 | `preflight [path]` | Check free space against `--need SIZE` (path defaults to `/`). Exits non-zero when short. |
-| `review [path]` | Markdown checklist. Flags: `--format md`, `--out FILE`, `--pairs`, redaction flags. |
+| `review [path]` | Markdown checklist. Flags: `--format md`, `--out FILE`, `--min-size SIZE` (default `1mb`; `0` lists everything), `--pairs`, redaction flags. |
 | `report [path]` | Self-contained HTML or XLSX report. Flags: `--format html\|xlsx`, `--out FILE`, redaction flags. |
-| `export [path]` | Write savings, opportunities, hotspots, review (and pairs) to a directory. Flags: `--out DIR` (required), `--pairs`, redaction flags. |
+| `export [path]` | Write savings, opportunities, hotspots, review (and pairs) to a directory. Flags: `--out DIR` (required), `--min-size SIZE` (default `1mb`), `--pairs`, redaction flags. |
 | `insights schema` / `insights render FILE` | Print the narrative-report JSON Schema, or render a report document. `render` takes `--format md\|html` and `--out FILE`. |
 
 ## Redaction flags
