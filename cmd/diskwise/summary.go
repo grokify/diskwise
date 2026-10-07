@@ -12,11 +12,7 @@ func newSummaryCmd() *cobra.Command {
 		Short: "Show what's known about a previously scanned path",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			raw := "."
-			if len(args) == 1 {
-				raw = args[0]
-			}
-			path, err := resolvePath(raw)
+			path, err := pathArg(cmd, args)
 			if err != nil {
 				return err
 			}

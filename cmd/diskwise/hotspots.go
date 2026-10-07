@@ -15,11 +15,7 @@ func newHotspotsCmd() *cobra.Command {
 		Short: "Show known heavy storage locations and large unexplained directories",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			raw := "."
-			if len(args) == 1 {
-				raw = args[0]
-			}
-			path, err := resolvePath(raw)
+			path, err := pathArg(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -51,7 +47,8 @@ func newHotspotsCmd() *cobra.Command {
 				fprintf(w, "  none found\n")
 			}
 			for _, f := range report.Known {
-				fprintf(w, "  %-10s [%s] %s\n", humanBytes(f.AllocatedSize), f.ActionClass, f.Reason)
+				fprintf(w, "  %-10s [%s] %s\n", humanBytes(f.AllocatedSize), f.ActionClass, f.Path)
+				fprintf(w, "             %s\n", f.Reason)
 			}
 
 			fprintf(w, "\nLarge unexplained directories\n")

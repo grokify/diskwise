@@ -21,11 +21,7 @@ func newLargestCmd() *cobra.Command {
 			if dirsOnly && filesOnly {
 				return fmt.Errorf("--dirs and --files are mutually exclusive")
 			}
-			raw := "."
-			if len(args) == 1 {
-				raw = args[0]
-			}
-			path, err := resolvePath(raw)
+			path, err := pathArg(cmd, args)
 			if err != nil {
 				return err
 			}

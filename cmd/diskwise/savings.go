@@ -28,11 +28,7 @@ func newSavingsCmd() *cobra.Command {
 		Short: "Show potential disk savings by action-class tier",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			raw := "."
-			if len(args) == 1 {
-				raw = args[0]
-			}
-			path, err := resolvePath(raw)
+			path, err := pathArg(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -55,11 +51,8 @@ func newSavingsCmd() *cobra.Command {
 			}
 
 			w := cmd.OutOrStdout()
-			var total int64
-			for _, v := range savings.Tiers {
-				total += v
-			}
-			fprintf(w, "Potential savings under %s: %s\n\n", savings.Path, humanBytes(total))
+			fprintf(w, "Potential savings under %s: %s\n", savings.Path, humanBytes(savings.Reclaimable()))
+			fprintf(w, "(excludes KEEP and UNKNOWN; UNKNOWN is unexplained large directories, not a savings estimate)\n\n")
 
 			seen := make(map[policy.ActionClass]bool, len(tierDisplayOrder))
 			for _, tier := range tierDisplayOrder {

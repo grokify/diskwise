@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/grokify/diskwise/index"
 )
 
@@ -46,6 +48,26 @@ func resolvePath(raw string) (string, error) {
 	abs, err := filepath.Abs(raw)
 	if err != nil {
 		return "", fmt.Errorf("resolve path %q: %w", raw, err)
+	}
+	return abs, nil
+}
+
+// pathArg returns the absolute path a command should operate on: its
+// optional path argument, or the current directory when none is given.
+// The implicit default is announced on stderr, because a query that
+// silently runs against the wrong directory looks identical to one
+// that found nothing (stdout, and so --json output, is unaffected).
+func pathArg(cmd *cobra.Command, args []string) (string, error) {
+	raw := "."
+	if len(args) == 1 {
+		raw = args[0]
+	}
+	abs, err := resolvePath(raw)
+	if err != nil {
+		return "", err
+	}
+	if len(args) == 0 {
+		fprintf(cmd.ErrOrStderr(), "diskwise: no path given; using current directory %s\n", abs)
 	}
 	return abs, nil
 }
