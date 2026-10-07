@@ -240,13 +240,16 @@ func escapeLike(s string) string {
 // dirPath) contains one of them are counted — e.g. ".photoslibrary/originals/"
 // to count a Photos library's original media only.
 func (db *DB) FileTotals(ctx context.Context, dirPath string, infixes []string) (files, logicalBytes int64, err error) {
-	query := `SELECT COUNT(*), COALESCE(SUM(logical_size), 0) FROM nodes WHERE kind = 'file' AND path LIKE ? ESCAPE '\'`
-	args := []any{escapeLike(dirPath) + "/%"}
+	// Bound the scan with a path range so SQLite uses the unique path
+	// index: "/" + 1 is "0", so [dir/, dir0) is exactly dir's
+	// descendants. A LIKE here would scan the whole table once per call.
+	query := `SELECT COUNT(*), COALESCE(SUM(logical_size), 0) FROM nodes WHERE kind = 'file' AND path >= ? AND path < ?`
+	args := []any{dirPath + "/", dirPath + "0"}
 	if len(infixes) > 0 {
 		clauses := make([]string, len(infixes))
 		for i, in := range infixes {
 			clauses[i] = `path LIKE ? ESCAPE '\'`
-			args = append(args, escapeLike(dirPath)+"/%"+escapeLike(in)+"%")
+			args = append(args, "%"+escapeLike(in)+"%")
 		}
 		// Fixed clauses only; every value flows through args.
 		//nolint:gosec // G202: no untrusted input reaches the query text

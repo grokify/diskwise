@@ -396,3 +396,55 @@ func TestScanRunByID(t *testing.T) {
 		t.Errorf("FinishedAt = %v, looks stale", got.FinishedAt)
 	}
 }
+
+// FileTotals counts a directory's descendants only: a sibling whose name
+// merely starts with the same characters must not leak in, and the
+// optional infix narrows the count.
+func TestFileTotals(t *testing.T) {
+	root := t.TempDir()
+	for path, size := range map[string]int{
+		"Docs/a.txt":     100,
+		"Docs/sub/b.txt": 200,
+		"Docs/Lib.photoslibrary/originals/1/p.jpeg": 1000,
+		"Docs/Lib.photoslibrary/Thumbnails/t.jpg":   10,
+		"Docs2/c.txt":    5000, // shares the "Docs" prefix
+		"Docs.bak/d.txt": 7000, // sorts just before Docs/
+		"top.txt":        1,
+	} {
+		full := filepath.Join(root, path)
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, full, size)
+	}
+	db := openTestDB(t)
+	tree, _, err := scan.Walk(context.Background(), root, scan.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.IngestScan(context.Background(), tree, nil); err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+
+	files, bytes, err := db.FileTotals(ctx, filepath.Join(root, "Docs"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files != 4 || bytes != 1310 {
+		t.Errorf("Docs: %d files / %d bytes, want 4 / 1310 (Docs2 and Docs.bak excluded)", files, bytes)
+	}
+
+	files, bytes, err = db.FileTotals(ctx, filepath.Join(root, "Docs"), []string{".photoslibrary/originals/"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files != 1 || bytes != 1000 {
+		t.Errorf("originals only: %d files / %d bytes, want 1 / 1000", files, bytes)
+	}
+
+	files, _, err = db.FileTotals(ctx, filepath.Join(root, "Nope"), nil)
+	if err != nil || files != 0 {
+		t.Errorf("missing dir: files=%d err=%v, want 0 / nil", files, err)
+	}
+}

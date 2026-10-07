@@ -80,6 +80,21 @@ func (d ArchiveInstallerDetector) Detect(ctx context.Context, db *index.DB, root
 		}
 		extractedSibling := siblingOK && siblingRow.Kind == index.KindDir
 
+		// A same-named directory is only a hint. When the archive's
+		// member list is cheap to read (plain tar or zip), check it
+		// against the directory so an archive that holds files the
+		// directory lacks is not called likely-safe on name alone.
+		var pair *ArchivePair
+		if extractedSibling {
+			// maxCompressed 1 skips gzip/bzip2: decompressing them
+			// during a scan-wide report would be far too slow.
+			if p, supported, perr := comparePairFor(ctx, db, row, siblingRow, 1); perr != nil {
+				return nil, fmt.Errorf("detect: archive-installer: %w", perr)
+			} else if supported {
+				pair = &p
+			}
+		}
+
 		var installedNewer bool
 		if strings.EqualFold(filepath.Ext(row.Name), ".dmg") {
 			if appModTime, found := installedApps[normalizeAppName(row.Name)]; found {
@@ -87,7 +102,7 @@ func (d ArchiveInstallerDetector) Detect(ctx context.Context, db *index.DB, root
 			}
 		}
 
-		proposed, confidence, reason := classifyArchive(row.Name, installedNewer, extractedSibling)
+		proposed, confidence, reason := classifyArchive(row.Name, installedNewer, extractedSibling, pair)
 
 		findings = append(findings, Finding{
 			Entity: entity.Entity{
@@ -109,12 +124,18 @@ func (d ArchiveInstallerDetector) Detect(ctx context.Context, db *index.DB, root
 	return findings, nil
 }
 
-func classifyArchive(name string, installedNewer, extractedSibling bool) (proposed policy.ActionClass, confidence float64, reason string) {
+func classifyArchive(name string, installedNewer, extractedSibling bool, pair *ArchivePair) (proposed policy.ActionClass, confidence float64, reason string) {
 	switch {
 	case looksLikeBackup(name):
 		return policy.Review, 0.2, "filename suggests a deliberate backup or export; not treated as disposable regardless of other evidence"
 	case installedNewer:
 		return policy.SafeDelete, 0.9, "already installed: a newer .app bundle with a matching name exists in Applications"
+	case extractedSibling && pair != nil && pair.Verdict == PairArchiveHasMore:
+		return policy.Review, 0.3, fmt.Sprintf("a same-named directory exists, but the archive lists %d more file(s) than it holds (%s); run `diskwise pairs` and check before removing the archive", pair.ArchiveExtra, pair.Compared)
+	case extractedSibling && pair != nil && pair.Verdict == PairSameCount:
+		return policy.Review, 0.4, fmt.Sprintf("a same-named directory has the same number of files (%d) but different total bytes; run `diskwise pairs` and check before removing the archive", pair.ArchiveFiles)
+	case extractedSibling && pair != nil && (pair.Verdict == PairSame || pair.Verdict == PairDirHasMore):
+		return policy.LikelySafe, 0.75, fmt.Sprintf("already extracted: a same-named directory holds %d file(s) against the archive's %d (%s); contents are not hashed", pair.DirFiles, pair.ArchiveFiles, pair.Compared)
 	case extractedSibling:
 		return policy.LikelySafe, 0.7, "appears already extracted: a directory with the same name exists alongside it"
 	default:

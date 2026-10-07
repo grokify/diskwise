@@ -111,49 +111,62 @@ func FindArchivePairs(ctx context.Context, db *index.DB, root string, opts Archi
 			continue
 		}
 
-		pair := ArchivePair{
-			Archive: row.Path, ArchiveAlloc: row.AllocatedSizeFor(),
-			Dir: dir, DirAlloc: dirRow.AllocatedSizeFor(),
-			Compared: CompareAllFiles,
-		}
 		if opts.Progress != nil {
 			opts.Progress(row.Path, row.LogicalSizeFor())
 		}
-		sum, err := summarizeArchive(row.Path, row.LogicalSizeFor(), opts.MaxCompressedBytes)
-		switch {
-		case errors.Is(err, errUnsupportedArchive):
-			continue // e.g. .gz of a single file, .7z: nothing to compare
-		case errors.Is(err, errCompressedTooLarge):
-			pair.Verdict, pair.Detail = PairSkipped, "compressed archive exceeds the read limit; raise --max-compressed to compare it"
-			pairs = append(pairs, pair)
-			continue
-		case err != nil:
-			pair.Verdict, pair.Detail = PairUnreadable, err.Error()
-			pairs = append(pairs, pair)
-			continue
-		}
-
-		infixes := []string(nil)
-		pair.ArchiveFiles, pair.ArchiveBytes = sum.Files, sum.Bytes
-		if sum.HasLibrary {
-			pair.Compared = CompareLibraryOriginals
-			pair.ArchiveFiles, pair.ArchiveBytes = sum.OriginalFiles, sum.OriginalBytes
-			infixes = libraryOriginalMarkers
-			pair.Detail = "compared original media only: a Photos library keeps the same originals under a different internal layout across app versions"
-		}
-		pair.DirFiles, pair.DirBytes, err = db.FileTotals(ctx, dir, infixes)
+		pair, supported, err := comparePairFor(ctx, db, row, dirRow, opts.MaxCompressedBytes)
 		if err != nil {
 			return nil, fmt.Errorf("detect: archive-pairs: %w", err)
 		}
-		pair.Verdict = comparePair(pair)
-		if pair.ArchiveFiles > pair.DirFiles {
-			pair.ArchiveExtra = pair.ArchiveFiles - pair.DirFiles
+		if !supported {
+			continue // e.g. .gz of a single file, .7z: nothing to compare
 		}
 		pairs = append(pairs, pair)
 	}
 
 	sort.SliceStable(pairs, func(i, j int) bool { return pairs[i].ArchiveAlloc > pairs[j].ArchiveAlloc })
 	return pairs, nil
+}
+
+// comparePairFor compares one archive with its sibling directory dirRow.
+// supported is false for formats DiskWise cannot list (nothing to
+// compare). Read failures are reported in the returned pair's Verdict,
+// not as errors; err is reserved for index failures.
+func comparePairFor(ctx context.Context, db *index.DB, row, dirRow index.NodeRow, maxCompressed int64) (pair ArchivePair, supported bool, err error) {
+	pair = ArchivePair{
+		Archive: row.Path, ArchiveAlloc: row.AllocatedSizeFor(),
+		Dir: dirRow.Path, DirAlloc: dirRow.AllocatedSizeFor(),
+		Compared: CompareAllFiles,
+	}
+	sum, rerr := summarizeArchive(row.Path, row.LogicalSizeFor(), maxCompressed)
+	switch {
+	case errors.Is(rerr, errUnsupportedArchive):
+		return pair, false, nil
+	case errors.Is(rerr, errCompressedTooLarge):
+		pair.Verdict, pair.Detail = PairSkipped, "compressed archive exceeds the read limit; raise --max-compressed to compare it"
+		return pair, true, nil
+	case rerr != nil:
+		pair.Verdict, pair.Detail = PairUnreadable, rerr.Error()
+		return pair, true, nil
+	}
+
+	infixes := []string(nil)
+	pair.ArchiveFiles, pair.ArchiveBytes = sum.Files, sum.Bytes
+	if sum.HasLibrary {
+		pair.Compared = CompareLibraryOriginals
+		pair.ArchiveFiles, pair.ArchiveBytes = sum.OriginalFiles, sum.OriginalBytes
+		infixes = libraryOriginalMarkers
+		pair.Detail = "compared original media only: a Photos library keeps the same originals under a different internal layout across app versions"
+	}
+	pair.DirFiles, pair.DirBytes, err = db.FileTotals(ctx, dirRow.Path, infixes)
+	if err != nil {
+		return pair, true, err
+	}
+	pair.Verdict = comparePair(pair)
+	if pair.ArchiveFiles > pair.DirFiles {
+		pair.ArchiveExtra = pair.ArchiveFiles - pair.DirFiles
+	}
+	return pair, true, nil
 }
 
 func comparePair(p ArchivePair) PairVerdict {
