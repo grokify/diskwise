@@ -17,11 +17,12 @@ import (
 type Service struct {
 	db       *index.DB
 	registry knowledge.Registry
+	probe    SystemProbe
 }
 
 // New returns a Service backed by db, using the built-in known-location registry.
 func New(db *index.DB) *Service {
-	return &Service{db: db, registry: knowledge.Default}
+	return &Service{db: db, registry: knowledge.Default, probe: platform.System{}}
 }
 
 // WithRegistry overrides the knowledge registry (primarily for tests,

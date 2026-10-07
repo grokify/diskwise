@@ -106,13 +106,14 @@ var sizeSuffixes = []struct {
 	suffix string
 	mult   int64
 }{
+	{"tib", 1 << 40}, {"gib", 1 << 30}, {"mib", 1 << 20}, {"kib", 1 << 10},
 	{"tb", 1 << 40}, {"gb", 1 << 30}, {"mb", 1 << 20}, {"kb", 1 << 10},
 	{"t", 1 << 40}, {"g", 1 << 30}, {"m", 1 << 20}, {"k", 1 << 10},
 	{"b", 1},
 }
 
 // parseSize parses a byte count with an optional 1024-based unit
-// suffix (b, k, kb, m, mb, g, gb, t, tb; case-insensitive). An empty
+// suffix (b, k, kb, kib, m, mb, mib, g, gb, gib, t, tb, tib; case-insensitive). An empty
 // string parses as 0.
 func parseSize(s string) (int64, error) {
 	trimmed := strings.TrimSpace(s)
