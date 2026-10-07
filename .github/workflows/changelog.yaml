@@ -1,0 +1,43 @@
+name: Changelog References
+
+# The shared Go CI checks out a single commit, so it cannot tell whether the
+# commits CHANGELOG.json links to still exist. This job fetches full history
+# and fails if any referenced commit is not reachable from the branch. It also
+# runs on version tags, so a tag cut before the changelog was right is flagged.
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - 'CHANGELOG.json'
+      - 'internal/changelogcheck/**'
+      - '.github/workflows/changelog.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'CHANGELOG.json'
+      - 'internal/changelogcheck/**'
+      - '.github/workflows/changelog.yaml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Verify changelog commit references
+        run: go test -count=1 -run 'TestRepoChangelog' -v ./internal/changelogcheck/
