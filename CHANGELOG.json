@@ -9,81 +9,81 @@
     {
       "version": "v0.2.0",
       "date": "2026-10-07",
-      "commit": "c29313e",
+      "commit": "8740242",
       "highlights": [
-        { "description": "Totals that add up and say how old they are: unexplained directories are disjoint with already-explained bytes subtracted, savings no longer counts the unknown tier, and results show when they were measured and flag findings whose paths have since been removed.", "commit": "d7cae79" },
-        { "description": "New commands: `preflight` (free space for an upgrade), `pairs` (archives vs. extracted copies), `review` (checkbox worklist), and `export` (a consistent set of JSON files), with `--redact` / `--redact-prefix` to share output safely.", "commit": "d023290" },
-        { "description": "First MkDocs user guide, deployed to GitHub Pages.", "commit": "fec18d5" }
+        { "description": "Totals that add up and say how old they are: unexplained directories are disjoint with already-explained bytes subtracted, savings no longer counts the unknown tier, and results show when they were measured and flag findings whose paths have since been removed.", "commit": "a4f9bce" },
+        { "description": "New commands: `preflight` (free space for an upgrade), `pairs` (archives vs. extracted copies), `review` (checkbox worklist), and `export` (a consistent set of JSON files), with `--redact` / `--redact-prefix` to share output safely.", "commit": "3b8d5ad" },
+        { "description": "First MkDocs user guide, deployed to GitHub Pages.", "commit": "c14b927" }
       ],
       "breaking": [
-        { "description": "`opportunities --json` now prints an object (`Root`, `ScannedAt`, `ScanStatus`, `Stale`, `Opportunities`, ...) instead of a bare array, matching `export`'s `opportunities.json`; `savings` no longer counts the keep and unknown tiers in its headline total", "commit": "c29313e" }
+        { "description": "`opportunities --json` now prints an object (`Root`, `ScannedAt`, `ScanStatus`, `Stale`, `Opportunities`, ...) instead of a bare array, matching `export`'s `opportunities.json`; `savings` no longer counts the keep and unknown tiers in its headline total", "commit": "8740242" }
       ],
       "added": [
-        { "description": "`preflight` command: capacity, available space, APFS container free space and local snapshots against a `--need` requirement, exiting non-zero when short", "commit": "62a2445" },
-        { "description": "`pairs` command: compare archives with the same-named directory beside them by file count and bytes, comparing Photos library originals only", "commit": "fee6631" },
-        { "description": "`review` and `export` commands: a checkbox worklist grouped by tier, and savings/opportunities/hotspots/review files each recording their root; `--min-size` states what it omits", "commit": "d023290" },
-        { "description": "`--redact` and `--redact-prefix` on opportunities, hotspots, savings, pairs, report, review and export", "commit": "e0aecd5" },
-        { "description": "Managed bundles (Photos, Music, TV, iMovie, Final Cut, Logic, GarageBand libraries, sparse bundles) reported as keep instead of unknown", "commit": "19942d5" },
-        { "description": "Results show when the covering scan finished, warn when it is over a week old, and mark findings whose paths no longer exist", "commit": "c29313e" },
-        { "description": "`scan` lists denied directories with Full Disk Access guidance", "commit": "0e37474" }
+        { "description": "`preflight` command: capacity, available space, APFS container free space and local snapshots against a `--need` requirement, exiting non-zero when short", "commit": "b8b9195" },
+        { "description": "`pairs` command: compare archives with the same-named directory beside them by file count and bytes, comparing Photos library originals only", "commit": "da4b6c3" },
+        { "description": "`review` and `export` commands: a checkbox worklist grouped by tier, and savings/opportunities/hotspots/review files each recording their root; `--min-size` states what it omits", "commit": "3b8d5ad" },
+        { "description": "`--redact` and `--redact-prefix` on opportunities, hotspots, savings, pairs, report, review and export", "commit": "5e951c9" },
+        { "description": "Managed bundles (Photos, Music, TV, iMovie, Final Cut, Logic, GarageBand libraries, sparse bundles) reported as keep instead of unknown", "commit": "4b4da9d" },
+        { "description": "Results show when the covering scan finished, warn when it is over a week old, and mark findings whose paths no longer exist", "commit": "8740242" },
+        { "description": "`scan` lists denied directories with Full Disk Access guidance", "commit": "dac3878" }
       ],
       "changed": [
-        { "description": "Unexplained directories are disjoint and exclude bytes other findings already report; savings reports a reclaimable total; hotspots prints known-location paths; commands defaulting to the current directory say so on stderr", "commit": "d7cae79" }
+        { "description": "Unexplained directories are disjoint and exclude bytes other findings already report; savings reports a reclaimable total; hotspots prints known-location paths; commands defaulting to the current directory say so on stderr", "commit": "a4f9bce" }
       ],
       "fixed": [
-        { "description": "An archive beside a same-named directory is checked against it (plain tar and zip) instead of being called likely-safe on the name alone; plain `.tar` is now recognized as an archive", "commit": "9fe43d0" }
+        { "description": "An archive beside a same-named directory is checked against it (plain tar and zip) instead of being called likely-safe on the name alone; plain `.tar` is now recognized as an archive", "commit": "e55fc10" }
       ],
       "documentation": [
-        { "description": "MkDocs user guide (installation, concepts, every command, JSON output, known locations, troubleshooting) and a refreshed README", "commit": "fec18d5" },
-        { "description": "Roadmap Phases 7-9 and the byte-level no-double-counting contract", "commit": "7ce87fd" }
+        { "description": "MkDocs user guide (installation, concepts, every command, JSON output, known locations, troubleshooting) and a refreshed README", "commit": "c14b927" },
+        { "description": "Roadmap Phases 7-9 and the byte-level no-double-counting contract", "commit": "1bd7dd6" }
       ],
       "build": [
-        { "description": "Deploy the documentation site to GitHub Pages", "commit": "d82a8be" }
+        { "description": "Deploy the documentation site to GitHub Pages", "commit": "1345be0" }
       ],
       "dependencies": [
-        { "description": "Bump actions/checkout and actions/setup-go to v7, modernc.org/sqlite to 1.58.0, and grokify/mogo to 0.74.8", "commit": "d0270e7" }
+        { "description": "Bump actions/checkout and actions/setup-go to v7, modernc.org/sqlite to 1.58.0, and grokify/mogo to 0.74.8", "commit": "b7a7577" }
       ]
     },
     {
       "version": "v0.1.0",
       "date": "2026-08-22",
-      "commit": "dcc5c78",
+      "commit": "d4a6115",
       "highlights": [
         { "description": "First release: a full discovery pipeline from a prioritized concurrent filesystem scanner through a SQLite index, knowledge-aware detectors, and a fail-closed policy engine, surfaced through the `diskwise` CLI (`scan`, `hotspots`, `opportunities`, `savings`)." },
-        { "description": "`insights` package: a JSON intermediate representation an LLM agent can fill out with ranked, evidence-backed savings opportunities — including kept/redundant path pairs and per-tool reclaim actions — rendered deterministically to Markdown or HTML.", "commit": "eb6d7b6" },
-        { "description": "`report` command: self-contained, sortable/filterable HTML and XLSX exports of reclaim opportunities, with no external script or CDN dependency.", "commit": "90e0088" }
+        { "description": "`insights` package: a JSON intermediate representation an LLM agent can fill out with ranked, evidence-backed savings opportunities — including kept/redundant path pairs and per-tool reclaim actions — rendered deterministically to Markdown or HTML.", "commit": "4a0a506" },
+        { "description": "`report` command: self-contained, sortable/filterable HTML and XLSX exports of reclaim opportunities, with no external script or CDN dependency.", "commit": "c7bc587" }
       ],
       "added": [
-        { "description": "`platform`: macOS allocated size (st_blocks), device/inode, and per-volume capacity/mount detection", "commit": "8f5fb0b" },
-        { "description": "`scan`: concurrent priority-queue directory walker (GOMAXPROCS workers, largest-known-bytes-first) with hard-link dedup and mount-boundary/depth handling", "commit": "a08769d" },
-        { "description": "`index`: SQLite index (modernc.org/sqlite, no cgo) with batched ingest, subtree byte rollups, and subtree-replacing rescan", "commit": "ad572d9" },
-        { "description": "`entity`: core entity model (cache, archive, database, container, VM, artifact family, ...) for attributing bytes to meaningful things instead of raw paths", "commit": "9df61e4" },
-        { "description": "`knowledge`: registry of known heavy-storage locations (Docker Desktop, Xcode, Homebrew, Go, Node, Python, AI models, iOS backups, browsers, Trash)", "commit": "01824c9" },
-        { "description": "`policy`: fail-closed action-class engine — managed data (databases, containers, VMs, apps) capped at backup_then_delete, safe_delete requires ≥0.8 confidence", "commit": "7056ef7" },
-        { "description": "`detect`: KnownLocationDetector, ArchiveInstallerDetector, ArtifactFamilyDetector, and LargeUnexplainedDetector, each claiming disjoint territory so nothing is double-counted", "commit": "495eda5" },
-        { "description": "`rollup`: collapses a finding's covered paths to the smallest fully-covered directory set, decomposing partially covered (\"mixed\") directories instead of over-claiming them", "commit": "76afd62" },
-        { "description": "`service`: scan/rescan/summary/tree/largest/hotspots/opportunities/savings orchestration over the scanner, index, knowledge registry, detectors, policy engine, and rollup", "commit": "7f6eb46" },
-        { "description": "`report`: HTML (vendored sortable/filterable table, file:// links) and XLSX (frozen header, autofilter) exports of opportunities", "commit": "90e0088" },
-        { "description": "`insights`: JSON IR (`insights.Report`) for narrative savings write-ups, with a generated/embedded JSON Schema and deterministic Markdown/HTML renderers", "commit": "eb6d7b6" },
-        { "description": "`diskwise` CLI: `scan`, `rescan`, `summary`, `tree`, `largest`, `hotspots`, `opportunities`, `savings`, `report`, and `insights` subcommands, with a live terminal progress meter during scan/rescan and `--json` output on every command", "commit": "6cf2057" }
+        { "description": "`platform`: macOS allocated size (st_blocks), device/inode, and per-volume capacity/mount detection", "commit": "eae7683" },
+        { "description": "`scan`: concurrent priority-queue directory walker (GOMAXPROCS workers, largest-known-bytes-first) with hard-link dedup and mount-boundary/depth handling", "commit": "153bb75" },
+        { "description": "`index`: SQLite index (modernc.org/sqlite, no cgo) with batched ingest, subtree byte rollups, and subtree-replacing rescan", "commit": "ce2c036" },
+        { "description": "`entity`: core entity model (cache, archive, database, container, VM, artifact family, ...) for attributing bytes to meaningful things instead of raw paths", "commit": "251d184" },
+        { "description": "`knowledge`: registry of known heavy-storage locations (Docker Desktop, Xcode, Homebrew, Go, Node, Python, AI models, iOS backups, browsers, Trash)", "commit": "da9cd8f" },
+        { "description": "`policy`: fail-closed action-class engine — managed data (databases, containers, VMs, apps) capped at backup_then_delete, safe_delete requires ≥0.8 confidence", "commit": "9638075" },
+        { "description": "`detect`: KnownLocationDetector, ArchiveInstallerDetector, ArtifactFamilyDetector, and LargeUnexplainedDetector, each claiming disjoint territory so nothing is double-counted", "commit": "b2b3c8c" },
+        { "description": "`rollup`: collapses a finding's covered paths to the smallest fully-covered directory set, decomposing partially covered (\"mixed\") directories instead of over-claiming them", "commit": "4b7f817" },
+        { "description": "`service`: scan/rescan/summary/tree/largest/hotspots/opportunities/savings orchestration over the scanner, index, knowledge registry, detectors, policy engine, and rollup", "commit": "398a64b" },
+        { "description": "`report`: HTML (vendored sortable/filterable table, file:// links) and XLSX (frozen header, autofilter) exports of opportunities", "commit": "c7bc587" },
+        { "description": "`insights`: JSON IR (`insights.Report`) for narrative savings write-ups, with a generated/embedded JSON Schema and deterministic Markdown/HTML renderers", "commit": "4a0a506" },
+        { "description": "`diskwise` CLI: `scan`, `rescan`, `summary`, `tree`, `largest`, `hotspots`, `opportunities`, `savings`, `report`, and `insights` subcommands, with a live terminal progress meter during scan/rescan and `--json` output on every command", "commit": "e1489ec" }
       ],
       "documentation": [
-        { "description": "Add PRD, TRD, PLAN, and a phased ROADMAP (RMI-DISKWISE-001 through 025) under docs/specs/", "commit": "b9f6037" },
-        { "description": "Add CI/lint/godoc/license/visualization badges to README.md", "commit": "76526a7" }
+        { "description": "Add PRD, TRD, PLAN, and a phased ROADMAP (RMI-DISKWISE-001 through 025) under docs/specs/", "commit": "aba5e61" },
+        { "description": "Add CI/lint/godoc/license/visualization badges to README.md", "commit": "095c801" }
       ],
       "build": [
-        { "description": "Scaffold Go module, golangci-lint config, GitHub Actions build/test/lint workflow, and package skeletons for both binaries", "commit": "7f2c7ad" },
-        { "description": "Rename the CI workflow file to the org's common naming convention", "commit": "055672b" },
-        { "description": "Switch CI to grokify's shared reusable workflows (go-ci, go-lint, go-sast-codeql) and add dependabot config", "commit": "c64c5ee" },
-        { "description": "Point shared workflow references at `main`", "commit": "dcc5c78" }
+        { "description": "Scaffold Go module, golangci-lint config, GitHub Actions build/test/lint workflow, and package skeletons for both binaries", "commit": "41a2c35" },
+        { "description": "Rename the CI workflow file to the org's common naming convention", "commit": "f94a671" },
+        { "description": "Switch CI to grokify's shared reusable workflows (go-ci, go-lint, go-sast-codeql) and add dependabot config", "commit": "6c206da" },
+        { "description": "Point shared workflow references at `main`", "commit": "d4a6115" }
       ],
       "dependencies": [
-        { "description": "Bump `grokify/.github` reusable workflow `go-sast-codeql.yaml` from 0.2.0 to 0.4.0", "commit": "2eda9c1" },
-        { "description": "Bump `grokify/.github` reusable workflow `go-ci.yaml` from 0.2.0 to 0.4.0", "commit": "b11b04f" },
-        { "description": "Bump `grokify/.github` reusable workflow `go-lint.yaml` from 0.2.0 to 0.4.0", "commit": "50f5aa6" }
+        { "description": "Bump `grokify/.github` reusable workflow `go-sast-codeql.yaml` from 0.2.0 to 0.4.0", "commit": "37bf5fb" },
+        { "description": "Bump `grokify/.github` reusable workflow `go-ci.yaml` from 0.2.0 to 0.4.0", "commit": "90bf513" },
+        { "description": "Bump `grokify/.github` reusable workflow `go-lint.yaml` from 0.2.0 to 0.4.0", "commit": "821da7d" }
       ],
       "internal": [
-        { "description": "Add MIT LICENSE file", "commit": "6a73b61" }
+        { "description": "Add MIT LICENSE file", "commit": "74797af" }
       ]
     }
   ]
