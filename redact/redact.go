@@ -16,10 +16,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/grokify/diskwise/detect"
+	"github.com/grokify/diskwise/entity"
+	"github.com/grokify/diskwise/reportdoc"
 	"github.com/grokify/diskwise/service"
 )
 
@@ -27,6 +30,10 @@ import (
 type Redactor struct {
 	home string
 	deny []string
+	// denyRE matches a deny prefix together with any path that continues
+	// from it, so free text naming a directory above a redacted file
+	// (".../work/acme") is scrubbed whole, not just up to the prefix.
+	denyRE []*regexp.Regexp
 }
 
 // New returns a Redactor that abbreviates home to "~" and fully
@@ -46,7 +53,9 @@ func New(home string, deny []string) *Redactor {
 		if d == "~" || strings.HasPrefix(d, "~/") {
 			d = filepath.Join(home, strings.TrimPrefix(d, "~"))
 		}
-		r.deny = append(r.deny, filepath.Clean(d))
+		d = filepath.Clean(d)
+		r.deny = append(r.deny, d)
+		r.denyRE = append(r.denyRE, regexp.MustCompile(regexp.QuoteMeta(d)+`(?:/[^\s"'`+"`"+`,;:()<>]*)*`))
 	}
 	return r
 }
@@ -85,8 +94,8 @@ func (r *Redactor) Path(path string) string {
 // abbreviates the home directory. Deny prefixes are scrubbed everywhere
 // because a prefix is itself the sensitive name.
 func (r *Redactor) text(s string, scrub []string) string {
-	for _, d := range r.deny {
-		s = strings.ReplaceAll(s, d, "<redacted>")
+	for _, re := range r.denyRE {
+		s = re.ReplaceAllString(s, "<redacted>")
 	}
 	for _, f := range scrub {
 		s = strings.ReplaceAll(s, f, "<redacted>")
@@ -220,4 +229,53 @@ func (r *Redactor) Pairs(pairs []detect.ArchivePair) []detect.ArchivePair {
 		out[i] = p
 	}
 	return out
+}
+
+// Document returns a redacted copy of d. It reuses Finding's scrubbing
+// (paths, entity names, and file or prefix names inside reasons and
+// scenario text), so a document redacted here leaks nothing a redacted
+// finding would not. It is the one place report output is redacted: build
+// the document, redact it, then render.
+func (r *Redactor) Document(d *reportdoc.Document) *reportdoc.Document {
+	out := *d
+	out.Root = r.Path(d.Root)
+
+	out.Findings = make([]reportdoc.Finding, len(d.Findings))
+	for i, f := range d.Findings {
+		df := detect.Finding{
+			Entity: entity.Entity{ID: f.Path, Kind: entity.Kind(f.Kind), Name: f.Name, Detector: f.Detector},
+			Path:   f.Path, Paths: f.Paths, Reason: f.Reason,
+		}
+		for _, sc := range f.Scenarios {
+			df.Scenarios = append(df.Scenarios, detect.Scenario{Name: sc.Name, Description: sc.Description, Paths: sc.Paths})
+		}
+		red := r.Finding(df)
+
+		nf := f
+		nf.Path, nf.Paths, nf.Reason, nf.Name = red.Path, red.Paths, red.Reason, red.Entity.Name
+		nf.ActionablePaths = r.paths(f.ActionablePaths)
+		if len(f.Scenarios) > 0 {
+			nf.Scenarios = make([]reportdoc.Scenario, len(f.Scenarios))
+			for j, sc := range f.Scenarios {
+				nf.Scenarios[j] = sc
+				nf.Scenarios[j].Description = red.Scenarios[j].Description
+				nf.Scenarios[j].Paths = red.Scenarios[j].Paths
+			}
+		}
+		out.Findings[i] = nf
+	}
+
+	if len(d.Pairs) > 0 {
+		dp := make([]detect.ArchivePair, len(d.Pairs))
+		for i, p := range d.Pairs {
+			dp[i] = detect.ArchivePair{Archive: p.Archive, Dir: p.Dir, Detail: p.Detail}
+		}
+		red := r.Pairs(dp)
+		out.Pairs = make([]reportdoc.Pair, len(d.Pairs))
+		for i, p := range d.Pairs {
+			p.Archive, p.Dir, p.Detail = red[i].Archive, red[i].Dir, red[i].Detail
+			out.Pairs[i] = p
+		}
+	}
+	return &out
 }

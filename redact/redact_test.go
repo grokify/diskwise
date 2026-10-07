@@ -7,6 +7,7 @@ import (
 
 	"github.com/grokify/diskwise/detect"
 	"github.com/grokify/diskwise/entity"
+	"github.com/grokify/diskwise/reportdoc"
 	"github.com/grokify/diskwise/service"
 )
 
@@ -147,5 +148,84 @@ func TestRedaction_PreservesFreshnessAndFilters(t *testing.T) {
 	hot := r.Hotspots(&service.HotspotsReport{Root: home, Freshness: fresh, MissingKnown: []string{"/Users/example/work/x", "/Users/example/Downloads/y"}})
 	if hot.Freshness != fresh || !strings.HasPrefix(hot.MissingKnown[0], "<redacted:") || hot.MissingKnown[1] != "~/Downloads/y" {
 		t.Errorf("hotspots fields lost or unredacted: %+v", hot)
+	}
+}
+
+func TestDocument_RedactsEverythingAndKeepsTheRest(t *testing.T) {
+	r := New(home, []string{"~/work"})
+	sensitivePath := "/Users/example/work/acme/payroll-export.zip"
+	at := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+	in := &reportdoc.Document{
+		SchemaVersion: reportdoc.SchemaVersion, Root: home, MeasuredAt: at, ScanStatus: "partial", Stale: true,
+		Tiers: map[string]int64{"review": 5}, ReclaimableBytes: 5,
+		Missing: reportdoc.Missing{Count: 1, Bytes: 2}, Filter: reportdoc.Filter{MinSizeBytes: 9, OmittedCount: 3, OmittedBytes: 4},
+		Findings: []reportdoc.Finding{
+			{
+				Tier: "review", Kind: "archive", Name: "payroll-export.zip", Path: sensitivePath, Paths: []string{sensitivePath},
+				ActionablePaths: []string{sensitivePath}, AllocatedBytes: 5, Confidence: 0.3, Missing: true,
+				Reason:    "downloaded archive payroll-export.zip under /Users/example/work/acme",
+				Scenarios: []reportdoc.Scenario{{Name: "keep-newest", Description: "Keep payroll-export.zip", ReclaimableBytes: 1, Paths: []string{sensitivePath}}},
+			},
+			{Tier: "safe_delete", Kind: "cache", Name: "Go caches", Path: "/Users/example/go/pkg/mod", AllocatedBytes: 7, Confidence: 1},
+		},
+		Pairs: []reportdoc.Pair{
+			{Archive: sensitivePath, Dir: "/Users/example/work/acme/payroll-export", Verdict: "same", Detail: "read " + sensitivePath + ": boom"},
+			{Archive: "/Users/example/Downloads/x.tar", Dir: "/Users/example/Downloads/x", Verdict: "same"},
+		},
+	}
+	before, _ := reportdoc.Marshal(*in)
+	got := r.Document(in)
+	after, _ := reportdoc.Marshal(*in)
+	if string(before) != string(after) {
+		t.Fatal("Document must not mutate its input")
+	}
+
+	blob, err := reportdoc.Marshal(*got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, leak := range []string{"payroll", "acme", "alice", "/Users/example/work", "Users/example"} {
+		if strings.Contains(string(blob), leak) {
+			t.Errorf("redacted document still contains %q:\n%s", leak, blob)
+		}
+	}
+
+	// Everything that is not a path survives, so a redacted report is
+	// still accurate about size, age and what was left out.
+	if got.Root != "~" || !got.MeasuredAt.Equal(at) || got.ScanStatus != "partial" || !got.Stale ||
+		got.ReclaimableBytes != 5 || got.Tiers["review"] != 5 || got.Missing.Count != 1 || got.Filter.OmittedCount != 3 {
+		t.Errorf("document-level fields lost: %+v", got)
+	}
+	f := got.Findings[0]
+	if !f.Missing || f.AllocatedBytes != 5 || f.Confidence != 0.3 || f.Tier != "review" || f.Scenarios[0].ReclaimableBytes != 1 {
+		t.Errorf("finding fields lost: %+v", f)
+	}
+	if got.Findings[1].Path != "~/go/pkg/mod" || got.Findings[1].Name != "Go caches" {
+		t.Errorf("a finding outside the deny prefix should only get the home abbreviation: %+v", got.Findings[1])
+	}
+	if got.Pairs[1].Archive != "~/Downloads/x.tar" || got.Pairs[0].Verdict != "same" {
+		t.Errorf("pairs wrong: %+v", got.Pairs)
+	}
+	if err := got.Validate(); err != nil {
+		t.Errorf("a redacted document must still be valid: %v", err)
+	}
+}
+
+// Free text can name a directory ABOVE the redacted file. Scrubbing only
+// the deny prefix would leave the rest of that path ("/acme") behind.
+func TestFinding_ScrubsWholeDirectoryPathsMentionedInText(t *testing.T) {
+	r := New(home, []string{"~/work"})
+	f := detect.Finding{
+		Path: "/Users/example/work/acme/project/file.zip", Paths: []string{"/Users/example/work/acme/project/file.zip"},
+		Reason: "found in /Users/example/work/acme/project (and /Users/example/work/other-client/x), kept",
+	}
+	got := r.Finding(f).Reason
+	for _, leak := range []string{"acme", "other-client", "project", "Users"} {
+		if strings.Contains(got, leak) {
+			t.Errorf("reason still contains %q: %q", leak, got)
+		}
+	}
+	if !strings.Contains(got, "kept") || !strings.Contains(got, "found in") {
+		t.Errorf("the surrounding words should survive: %q", got)
 	}
 }
