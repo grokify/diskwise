@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -80,15 +79,6 @@ func printJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
-}
-
-// jsonBytes renders v exactly as printJSON would write it.
-func jsonBytes(v any) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := printJSON(&buf, v); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
 }
 
 // fprintf writes to w, ignoring the error: a failed write to
