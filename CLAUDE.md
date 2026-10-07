@@ -93,8 +93,9 @@ RMI slug: `DISKWISE`. Phases and RMI IDs are tracked in
 `docs/specs/ROADMAP.md`; commits implementing one carry the trailer
 `Refs: RMI-DISKWISE-NNN` (see the org CLAUDE.md for the general
 convention). Phase status there was reconciled against actual code
-state as of v0.1.0 (RMI-001 through 015 and the unplanned Phase 6
-RMI-026/027 marked `done`; Phase 4/5 still `planned`). It is not
+state as of v0.2.0 (RMI-001 through 015, the unplanned Phase 6
+RMI-026/027, and Phases 7-9 RMI-028 through 040 marked `done`; Phase 4/5
+still `planned`). It is not
 automatically kept in sync with implementation — re-verify status
 against the code before trusting a label, and update the table when
 you notice drift instead of leaving it stale for the next session.

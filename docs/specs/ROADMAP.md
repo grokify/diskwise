@@ -3,7 +3,7 @@
 **Initiative:** `INIT-DISKWISE-001`
 **Repository:** `github.com/grokify/diskwise`
 
-**Status:** v0.1.0 released 2026-08-22; Phases 1–3 and 6 shipped in it, Phases 7–8 are done since (unreleased), Phases 4–5 planned
+**Status:** v0.1.0 released 2026-08-22 (Phases 1–3 and 6); v0.2.0 prepared (Phases 7–9 done); Phases 4–5 planned
 **RMI slug:** `DISKWISE`
 
 Phase status is always derived from member RMI statuses, never set directly. Review and execution happen by phase. Commits implementing an RMI carry the git trailer `Refs: RMI-DISKWISE-NNN`.
@@ -81,6 +81,13 @@ Not part of the original PRD/TRD phased plan; added after dogfooding on a full h
 - [x] `RMI-DISKWISE-036` `export --out <dir>`: savings, opportunities, hotspots, review (and pairs with `--pairs`) with the scanned root recorded in every JSON file; `opportunities --json` keeps its bare array for compatibility
 - [x] `RMI-DISKWISE-037` Path redaction: `--redact` abbreviates the home directory, `--redact-prefix` replaces everything under a prefix with a stable opaque token, applied to opportunities, hotspots, savings, report, pairs, review and export
 
+## Phase 9 — Freshness & Output Consistency
+**Theme:** Results that say how current they are and agree with each other — a snapshot index must never present a vanished cache as a saving, an archive must not be called safe on its name alone, and opportunities have one output shape.
+
+- [x] `RMI-DISKWISE-038` Pair-aware archive classification: a plain tar or zip beside a same-named directory is compared with it, so an archive holding files the directory lacks is `review`, not `likely_safe`; the file-count query uses the path index
+- [x] `RMI-DISKWISE-039` Freshness: every result states when the covering scan finished, warns when it is over a week old, and marks findings whose paths no longer exist on disk
+- [x] `RMI-DISKWISE-040` Unified opportunities report (breaking): `opportunities --json` and `export` share one envelope, and `--min-size` (default `1mb` for `review` and `export`) states how many findings it omitted
+
 ## Post-V1 backlog (unphased)
 
 Not yet broken into RMIs; not parsed by `vistudio roadmap import` since items here have no RMI ID yet. Promote into a phase above once scheduled.
@@ -93,3 +100,5 @@ Not yet broken into RMIs; not parsed by `vistudio roadmap import` since items he
 - Linux support; versioned external rule corpus
 - More known locations: Time Machine local snapshots, MobileSync device backups, Mail downloads, per-project build artifacts (Rust `target/`, `node_modules`, Python venvs, Gradle caches), large `.git` object stores
 - Age/staleness signal (atime/mtime) to rank the review tier
+- Group per-file archive findings by parent directory in `review`, to shorten lists further
+- Detect paths whose size changed since the scan (today only removal is detected)
