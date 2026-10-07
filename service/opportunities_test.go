@@ -198,3 +198,88 @@ func TestService_Savings_SumsMatchOpportunities(t *testing.T) {
 		t.Error("expected a non-zero safe_delete tier for the cache finding")
 	}
 }
+
+// Byte-level counterpart of the NoDoubleCounting test above: an
+// unexplained directory that contains a known location must report
+// only the bytes no other finding already claims, and one that is
+// entirely explained must not be reported at all. Without this,
+// Savings' per-tier totals add up to more than the disk holds.
+func TestService_Opportunities_UnexplainedExcludesExplainedBytes(t *testing.T) {
+	root := t.TempDir()
+
+	// Wrapper holds a known cache (5 MB) plus 3 MB nobody explains.
+	wrapper := filepath.Join(root, "Wrapper")
+	cache := filepath.Join(wrapper, "AppCache")
+	// OnlyCache holds nothing but a second known cache, so after
+	// subtraction nothing is left to call unexplained.
+	onlyCache := filepath.Join(root, "OnlyCache")
+	cache2 := filepath.Join(onlyCache, "AppCache2")
+	for _, d := range []string{cache, cache2} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeFile(t, filepath.Join(cache, "c.bin"), 5_000_000)
+	writeFile(t, filepath.Join(wrapper, "other.bin"), 3_000_000)
+	writeFile(t, filepath.Join(cache2, "c.bin"), 5_000_000)
+
+	svc := newTestService(t).WithRegistry(fixtureRegistryFor(cache, cache2))
+	ctx := context.Background()
+	if _, err := svc.Scan(ctx, ScanRequest{Root: root}); err != nil {
+		t.Fatal(err)
+	}
+
+	opps, err := svc.Opportunities(ctx, OpportunityQuery{Path: root, MinUnexplainedSize: 1_000_000})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var gotWrapper bool
+	for _, o := range opps {
+		switch o.Finding.Path {
+		case onlyCache:
+			t.Errorf("fully explained directory %s reported as unexplained", onlyCache)
+		case wrapper:
+			gotWrapper = true
+			if o.Finding.ActionClass != policy.Unknown {
+				t.Fatalf("Wrapper finding is %s, want unknown", o.Finding.ActionClass)
+			}
+			if o.Finding.AllocatedSize >= 5_000_000 {
+				t.Errorf("Wrapper reports %d bytes, which still includes the cache's 5 MB", o.Finding.AllocatedSize)
+			}
+			if o.Finding.AllocatedSize < 3_000_000 {
+				t.Errorf("Wrapper reports %d bytes, want at least its own 3 MB", o.Finding.AllocatedSize)
+			}
+		}
+	}
+	if !gotWrapper {
+		t.Error("missing unexplained finding for the directory with 3 MB of unclaimed data")
+	}
+
+	// Total attributed bytes can never exceed what the root holds.
+	rootRow, ok, err := svc.db.NodeByPath(ctx, root)
+	if err != nil || !ok {
+		t.Fatalf("root node: ok=%v err=%v", ok, err)
+	}
+	var total int64
+	for _, o := range opps {
+		total += o.Finding.AllocatedSize
+	}
+	if total > rootRow.AllocatedSizeFor() {
+		t.Errorf("findings attribute %d bytes but the root holds only %d", total, rootRow.AllocatedSizeFor())
+	}
+}
+
+func TestSavingsByTier_ReclaimableExcludesKeepAndUnknown(t *testing.T) {
+	s := &SavingsByTier{Tiers: map[policy.ActionClass]int64{
+		policy.SafeDelete:       100,
+		policy.LikelySafe:       10,
+		policy.BackupThenDelete: 5,
+		policy.Review:           1,
+		policy.Keep:             1000,
+		policy.Unknown:          10000,
+	}}
+	if got, want := s.Reclaimable(), int64(116); got != want {
+		t.Errorf("Reclaimable() = %d, want %d", got, want)
+	}
+}

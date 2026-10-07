@@ -218,11 +218,17 @@ func TestService_Rescan(t *testing.T) {
 // paths, so Hotspots/Summary tests don't depend on the real machine's
 // installed apps (knowledge.Default is environment-dependent).
 func fixtureRegistry(cachePath string) knowledge.Registry {
+	return fixtureRegistryFor(cachePath)
+}
+
+// fixtureRegistryFor is fixtureRegistry for a location with several
+// data paths.
+func fixtureRegistryFor(cachePaths ...string) knowledge.Registry {
 	return knowledge.Registry{
 		{
 			ID:                 "fixture-cache",
 			Description:        "Fixture cache",
-			DataPaths:          []string{cachePath},
+			DataPaths:          cachePaths,
 			Entity:             entity.KindCache,
 			Semantics:          knowledge.SemanticsRegeneratableCache,
 			DefaultActionClass: policy.SafeDelete,

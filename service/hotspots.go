@@ -49,5 +49,14 @@ func (s *Service) Hotspots(ctx context.Context, q HotspotsQuery) (*HotspotsRepor
 		return nil, fmt.Errorf("service: hotspots %s: %w", q.Path, err)
 	}
 
+	var knownPaths []string
+	for _, f := range known {
+		knownPaths = append(knownPaths, f.Paths...)
+	}
+	unexplained, err = excludeExplained(ctx, s.db, unexplained, knownPaths, q.MinSize)
+	if err != nil {
+		return nil, fmt.Errorf("service: hotspots %s: %w", q.Path, err)
+	}
+
 	return &HotspotsReport{Root: q.Path, Known: known, Unexplained: unexplained}, nil
 }

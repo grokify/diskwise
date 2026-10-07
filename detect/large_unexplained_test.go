@@ -70,3 +70,30 @@ func TestLargeUnexplainedDetector_RespectsLimit(t *testing.T) {
 		t.Fatalf("got %d findings, want 2 (limit)", len(findings))
 	}
 }
+
+// A directory and its own large subdirectories must not both be
+// reported: their sizes overlap, so listing both double-counts.
+func TestLargeUnexplainedDetector_FindingsAreDisjoint(t *testing.T) {
+	root := t.TempDir()
+	outer := filepath.Join(root, "Outer")
+	inner := filepath.Join(outer, "Inner")
+	if err := os.MkdirAll(inner, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(inner, "f.bin"), 3_000_000)
+	writeFile(t, filepath.Join(outer, "g.bin"), 1_500_000)
+	db := ingestFixture(t, root)
+
+	det := LargeUnexplainedDetector{MinSize: 1_000_000, Limit: 10}
+	findings, err := det.Detect(context.Background(), db, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(findings) != 1 || findings[0].Path != outer {
+		var got []string
+		for _, f := range findings {
+			got = append(got, f.Path)
+		}
+		t.Fatalf("findings = %v, want only the outermost directory %s", got, outer)
+	}
+}
