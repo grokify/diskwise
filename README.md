@@ -50,19 +50,23 @@ troubleshooting. Project documents live in this repo:
 
 ## Status
 
-**v0.1.0** is released: the scanner, SQLite index, knowledge registry,
+**v0.1.0** shipped the scanner, SQLite index, knowledge registry,
 detectors, policy engine, report/insights output formats, and the `diskwise`
-CLI (roadmap Phases 1–3 and 6). Since then, on `main` and not yet released
-(Phases 7–8):
+CLI (roadmap Phases 1–3 and 6). **v0.2.0** (Phases 7–9) adds:
 
 - Totals that add up: unexplained directories are disjoint, bytes another
   finding already reports are excluded, and `savings` no longer counts the
   `unknown` tier as savings.
+- Results that say how old they are, and mark findings whose paths no longer
+  exist.
 - App-managed bundles (e.g. Photos libraries) classified as `keep`.
 - `pairs` compares archives with their extracted copies; `preflight` checks
   free space for an OS upgrade; `review` and `export` produce a checkbox
   worklist and a consistent set of JSON files; `--redact` /
   `--redact-prefix` make output safe to share.
+
+`opportunities --json` is now an object rather than a bare array; see the
+[v0.2.0 release notes](docs/releases/v0.2.0.md).
 
 The MCP server (`cmd/diskwise-mcp`) is a skeleton with no tools registered
 yet (Phases 4–5, still planned). See
