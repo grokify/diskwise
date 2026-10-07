@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/grokify/diskwise/reportdoc/document",
+  "$ref": "#/$defs/Document",
+  "$defs": {
+    "Document": {
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "enum": [
+            "1"
+          ],
+          "description": "Must be reportdoc.SchemaVersion; a renderer rejects any other value."
+        },
+        "root": {
+          "type": "string",
+          "description": "Absolute path the report covers."
+        },
+        "measuredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scanStatus": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ],
+          "description": "partial means some directories were denied or skipped."
+        },
+        "stale": {
+          "type": "boolean",
+          "description": "True when the scan is more than a week old."
+        },
+        "tiers": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object",
+          "description": "Allocated bytes per action tier before any size filter. Keys are the tier names."
+        },
+        "reclaimableBytes": {
+          "type": "integer"
+        },
+        "missing": {
+          "$ref": "#/$defs/Missing"
+        },
+        "filter": {
+          "$ref": "#/$defs/Filter"
+        },
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/Finding"
+          },
+          "type": "array"
+        },
+        "pairs": {
+          "items": {
+            "$ref": "#/$defs/Pair"
+          },
+          "type": "array",
+          "description": "Archive and extracted-directory comparisons. Present only when requested."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "root",
+        "measuredAt",
+        "scanStatus",
+        "stale",
+        "tiers",
+        "reclaimableBytes",
+        "missing",
+        "filter",
+        "findings"
+      ]
+    },
+    "Filter": {
+      "properties": {
+        "minSizeBytes": {
+          "type": "integer",
+          "description": "Findings smaller than this many allocated bytes were omitted. 0 means no cut."
+        },
+        "omittedCount": {
+          "type": "integer"
+        },
+        "omittedBytes": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "minSizeBytes",
+        "omittedCount",
+        "omittedBytes"
+      ]
+    },
+    "Finding": {
+      "properties": {
+        "tier": {
+          "type": "string",
+          "enum": [
+            "safe_delete",
+            "likely_safe",
+            "backup_then_delete",
+            "review",
+            "keep",
+            "unknown"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "description": "What the finding is: cache or archive or artifact_family or model or container or managed_bundle or unknown and so on."
+        },
+        "name": {
+          "type": "string"
+        },
+        "detector": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "description": "Anchor path: the single node or the containing directory for a multi-path finding."
+        },
+        "paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Every indexed node the finding covers."
+        },
+        "actionablePaths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Paths rolled up to the highest fully covered directory: what to act on."
+        },
+        "allocatedBytes": {
+          "type": "integer"
+        },
+        "logicalBytes": {
+          "type": "integer"
+        },
+        "confidence": {
+          "type": "number",
+          "maximum": 1,
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string"
+        },
+        "missing": {
+          "type": "boolean",
+          "description": "True when a path of the finding no longer exists on disk."
+        },
+        "scenarios": {
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tier",
+        "kind",
+        "path",
+        "allocatedBytes",
+        "logicalBytes",
+        "confidence"
+      ]
+    },
+    "Missing": {
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "bytes": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "count",
+        "bytes"
+      ]
+    },
+    "Pair": {
+      "properties": {
+        "archive": {
+          "type": "string"
+        },
+        "archiveAllocatedBytes": {
+          "type": "integer"
+        },
+        "dir": {
+          "type": "string"
+        },
+        "dirAllocatedBytes": {
+          "type": "integer"
+        },
+        "compared": {
+          "type": "string",
+          "description": "What was compared: all files or photos library originals only."
+        },
+        "archiveFiles": {
+          "type": "integer"
+        },
+        "archiveBytes": {
+          "type": "integer"
+        },
+        "dirFiles": {
+          "type": "integer"
+        },
+        "dirBytes": {
+          "type": "integer"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "same",
+            "same_count",
+            "archive_has_more",
+            "dir_has_more",
+            "skipped",
+            "unreadable"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        },
+        "archiveExtraFiles": {
+          "type": "integer",
+          "description": "How many more files the archive lists than the directory holds."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "archive",
+        "archiveAllocatedBytes",
+        "dir",
+        "dirAllocatedBytes",
+        "compared",
+        "archiveFiles",
+        "archiveBytes",
+        "dirFiles",
+        "dirBytes",
+        "verdict"
+      ]
+    },
+    "Scenario": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "reclaimableBytes": {
+          "type": "integer"
+        },
+        "paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "description",
+        "reclaimableBytes"
+      ]
+    }
+  }
+}
