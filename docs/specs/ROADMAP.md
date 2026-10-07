@@ -3,7 +3,7 @@
 **Initiative:** `INIT-DISKWISE-001`
 **Repository:** `github.com/grokify/diskwise`
 
-**Status:** v0.1.0 released 2026-08-22 (Phases 1–3 and 6); v0.2.0 prepared (Phases 7–9 done); Phases 4–5 planned
+**Status:** v0.1.0 released 2026-08-22 (Phases 1–3 and 6); v0.2.0 released (Phases 7–9); Phase 10 done on `main`, unreleased; Phases 4–5 planned
 **RMI slug:** `DISKWISE`
 
 Phase status is always derived from member RMI statuses, never set directly. Review and execution happen by phase. Commits implementing an RMI carry the git trailer `Refs: RMI-DISKWISE-NNN`.
@@ -87,6 +87,14 @@ Not part of the original PRD/TRD phased plan; added after dogfooding on a full h
 - [x] `RMI-DISKWISE-038` Pair-aware archive classification: a plain tar or zip beside a same-named directory is compared with it, so an archive holding files the directory lacks is `review`, not `likely_safe`; the file-count query uses the path index
 - [x] `RMI-DISKWISE-039` Freshness: every result states when the covering scan finished, warns when it is over a week old, and marks findings whose paths no longer exist on disk
 - [x] `RMI-DISKWISE-040` Unified opportunities report (breaking): `opportunities --json` and `export` share one envelope, and `--min-size` (default `1mb` for `review` and `export`) states how many findings it omitted
+
+## Phase 10 — One Report Document
+**Theme:** Replace the overlapping per-topic JSON outputs with a single versioned report document that every rendering (HTML, XLSX, Markdown) is a pure function of, so a report can be saved once and rendered, redacted, and shared anywhere.
+
+- [x] `RMI-DISKWISE-041` `reportdoc/`: the report document (tier totals before any size cut, freshness, vanished-path and filter accounting, findings, optional archive pairs), strict parser and validator, and a generated JSON Schema with camelCase properties
+- [x] `RMI-DISKWISE-042` Document-based renderers: HTML with notices, hotspot and archive-pair sections; XLSX; Markdown; all deterministic; `report --from` renders a saved document with no index
+- [x] `RMI-DISKWISE-043` `export` writes `report.json`, `report.html` and `review.md` (breaking: the separate savings, opportunities, hotspots and pairs JSON files are gone); `report` gains `--format md|json`, `--min-size` and `--schema`
+- [x] `RMI-DISKWISE-044` Redaction applies to the document, and now scrubs a whole directory path mentioned in free text instead of only the redacted prefix
 
 ## Post-V1 backlog (unphased)
 

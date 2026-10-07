@@ -116,7 +116,7 @@ explained worklist; you act on it.
 | `savings`, `opportunities` | Reclaimable space by tier; the full findings list with filters |
 | `pairs` | Compare archives with the extracted directories beside them |
 | `preflight` | Check free space against a requirement (e.g. `--need 50gib`) |
-| `review`, `report`, `export` | Checklist, HTML/XLSX report, or a set of JSON files |
+| `report`, `review`, `export` | Render one report document as HTML, XLSX, Markdown or JSON; render a saved `report.json` anywhere with `--from` |
 | `insights` | Render a narrative savings write-up from a JSON document |
 
 Every command accepts `--json`. See the

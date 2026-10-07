@@ -45,9 +45,9 @@ on stderr when they do.
 | Command | Purpose |
 |---|---|
 | `preflight [path]` | Check free space against `--need SIZE` (path defaults to `/`). Exits non-zero when short. |
-| `review [path]` | Markdown checklist. Flags: `--format md`, `--out FILE`, `--min-size SIZE` (default `1mb`; `0` lists everything), `--pairs`, redaction flags. |
-| `report [path]` | Self-contained HTML or XLSX report. Flags: `--format html\|xlsx`, `--out FILE`, redaction flags. |
-| `export [path]` | Write savings, opportunities, hotspots, review (and pairs) to a directory. Flags: `--out DIR` (required), `--min-size SIZE` (default `1mb`), `--pairs`, redaction flags. |
+| `report [path]` | Render the [report document](json-output.md#report-document) as `html`, `xlsx`, `md` or `json`. Flags: `--format`, `--out FILE` (default `diskwise-report.<format>`), `--from FILE` (render a saved document; no path or scan needed), `--min-size SIZE` (default `1mb`; `0` lists everything), `--pairs`, `--schema` (print the document's JSON Schema), redaction flags. |
+| `review [path]` | The Markdown checklist (same as `report --format md`, to stdout by default). Flags: `--out FILE`, `--from FILE`, `--min-size SIZE`, `--pairs`, redaction flags. |
+| `export [path]` | Write `report.json`, `report.html` and `review.md` to a directory. Flags: `--out DIR` (required), `--min-size SIZE`, `--pairs`, redaction flags. |
 | `insights schema` / `insights render FILE` | Print the narrative-report JSON Schema, or render a report document. `render` takes `--format md\|html` and `--out FILE`. |
 
 ## Redaction flags

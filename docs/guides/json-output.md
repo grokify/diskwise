@@ -57,12 +57,70 @@ The unit behind `opportunities`, `hotspots`, and the review list:
 | `savings` | `{Path, Tiers: {"safe_delete": bytes, ...}, ScannedAt, ScanStatus, Stale, MissingCount, MissingBytes}` |
 | `opportunities` | The [opportunities report](#opportunities-report) below |
 | `pairs` | Array of archive pairs, below |
+| `report --format json` | The [report document](#report-document) below |
 | `preflight` | Preflight result, below |
+
+## Report document
+
+`diskwise report --format json` (and `export`, as `report.json`) writes the
+**report document**: one file from which the HTML, spreadsheet, and Markdown
+reports are rendered. Unlike the command output above, its property names are
+**camelCase** and it has a published JSON Schema (`diskwise report --schema`).
+
+```json
+{
+  "schemaVersion": "1",
+  "root": "/Users/you",
+  "measuredAt": "2026-10-07T18:22:00Z",
+  "scanStatus": "partial",
+  "stale": false,
+  "tiers": { "safe_delete": 115851563008, "review": 405000000000, "keep": 105000000000, "unknown": 690000000000 },
+  "reclaimableBytes": 535000000000,
+  "missing": { "count": 0, "bytes": 0 },
+  "filter": { "minSizeBytes": 1048576, "omittedCount": 14320, "omittedBytes": 1288490188 },
+  "findings": [
+    {
+      "tier": "safe_delete",
+      "kind": "cache",
+      "name": "Go module cache and build cache",
+      "detector": "known-location:go-caches",
+      "path": "/Users/you/Library/Caches/go-build",
+      "paths": ["/Users/you/Library/Caches/go-build"],
+      "actionablePaths": ["/Users/you/Library/Caches/go-build"],
+      "allocatedBytes": 43700000000,
+      "logicalBytes": 43700000000,
+      "confidence": 1,
+      "reason": "Go module cache and build cache - regeneratable cache"
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `schemaVersion` | `"1"`. A renderer rejects any other value instead of mis-rendering it. |
+| `root`, `measuredAt`, `scanStatus`, `stale` | What the report covers and when the covering scan finished (UTC). `stale` is true for a scan over a week old. |
+| `tiers` | Allocated bytes per action tier across **all** findings, before any size filter. |
+| `reclaimableBytes` | The sum of the tiers you could actually reclaim: everything except `keep` and `unknown`. |
+| `missing` | Count and bytes of findings whose paths no longer exist on disk. Still included in `tiers`. |
+| `filter` | The `--min-size` cut and what it omitted. |
+| `findings[]` | The findings. Each has `tier`, `kind`, `path`, `paths`, `actionablePaths`, sizes, `confidence`, `reason`, and optionally `missing` and `scenarios`. |
+| `pairs[]` | Archive comparisons. Present only when requested with `--pairs`. |
+
+!!! note "Savings and hotspots are views of this"
+    `savings` is the `tiers` totals, and `hotspots` is a selection of
+    `findings` (known locations and unexplained directories). The document
+    states each fact once, so there is nothing to cross-reference.
+
+Parsing is strict: unknown properties are rejected, so a typo or schema drift
+fails loudly. The schema is generated from the Go types in the `reportdoc`
+package, and stays in step with them.
 
 ## Opportunities report
 
-`opportunities --json` and the `opportunities.json` file written by
-[`export`](sharing.md#export-everything-at-once) are the same shape:
+`opportunities --json` prints this envelope (PascalCase, like the other
+command output). To render or share a report, use the
+[report document](#report-document) instead:
 
 ```json
 {
@@ -141,7 +199,7 @@ archive lists than the directory holds, when positive. See
 ## Redaction
 
 With `--redact` or `--redact-prefix`, path fields (and names and reasons
-derived from redacted paths) are rewritten before JSON is produced, so the
+derived from redacted paths) are replaced before JSON is produced, so the
 shapes above are unchanged. See
 [Sharing safely](sharing.md#sharing-safely).
 

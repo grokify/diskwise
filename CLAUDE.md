@@ -87,6 +87,24 @@ schemakit lint --property-case camelCase insights/schema/insights.schema.json
 blank import in `insights/schema/gen/tools.go` — don't remove that
 file or `go mod tidy` will silently strip the dependency.
 
+## Report document: Go structs are the source of truth
+
+`reportdoc.Document` is the one file every report rendering (HTML, XLSX,
+Markdown) is a pure function of. Renderers read the document and nothing
+else, and must not call the clock: the only time shown is
+`measuredAt`. If you change `reportdoc/types.go`, regenerate and lint the
+schema (properties are camelCase per the document-format convention):
+
+```bash
+go run reportdoc/schema/gen/main.go
+schemakit lint --property-case camelCase reportdoc/schema/reportdoc.schema.json
+```
+
+`reportdoc/schema/gen/main.go` is `//go:build ignore`; its dependency is kept
+by `reportdoc/schema/gen/tools.go`, like the insights generator. A test fails
+when the embedded schema's properties drift from the types. Redaction happens
+once, on the document (`redact.Redactor.Document`), before rendering.
+
 ## Releasing
 
 Before tagging, besides the org checklist, confirm every commit hash in
