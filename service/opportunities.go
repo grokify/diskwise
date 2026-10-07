@@ -23,6 +23,10 @@ type OpportunityQuery struct {
 	// MinUnexplainedSize is the smallest unexplained-directory remainder
 	// worth reporting; 0 uses detect.DefaultUnexplainedMinSize.
 	MinUnexplainedSize int64
+	// MinSize drops findings smaller than this many allocated bytes from
+	// the result; 0 keeps everything. OpportunitiesReport counts what it
+	// dropped.
+	MinSize int64
 }
 
 // Opportunity is one reclaimable finding with its directly-actionable
@@ -31,6 +35,10 @@ type OpportunityQuery struct {
 type Opportunity struct {
 	Finding detect.Finding
 	Paths   []string
+	// Missing is true when a path of the finding no longer exists on
+	// disk: the index is out of date for it (rescan its parent). It is
+	// still counted in totals, which describe the index, not the disk.
+	Missing bool `json:",omitempty"`
 }
 
 // Opportunities runs every detector under q.Path and returns
@@ -40,6 +48,34 @@ type Opportunity struct {
 // ArtifactFamilyDetector each exclude the other's territory and any
 // KnownLocation; LargeUnexplainedDetector excludes all claimed paths.
 func (s *Service) Opportunities(ctx context.Context, q OpportunityQuery) ([]Opportunity, error) {
+	all, err := s.opportunities(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	kept, _, _ := partitionBySize(all, q.MinSize)
+	return kept, nil
+}
+
+// partitionBySize splits opps into those at least minSize bytes and
+// the count and bytes of those below it.
+func partitionBySize(opps []Opportunity, minSize int64) (kept []Opportunity, omitted int, omittedBytes int64) {
+	if minSize <= 0 {
+		return opps, 0, 0
+	}
+	for _, o := range opps {
+		if o.Finding.AllocatedSize < minSize {
+			omitted++
+			omittedBytes += o.Finding.AllocatedSize
+			continue
+		}
+		kept = append(kept, o)
+	}
+	return kept, omitted, omittedBytes
+}
+
+// opportunities is Opportunities without the MinSize cut, so callers
+// can report what the cut removed.
+func (s *Service) opportunities(ctx context.Context, q OpportunityQuery) ([]Opportunity, error) {
 	if _, ok, err := s.db.NodeByPath(ctx, q.Path); err != nil {
 		return nil, fmt.Errorf("service: opportunities %s: %w", q.Path, err)
 	} else if !ok {
@@ -72,7 +108,7 @@ func (s *Service) Opportunities(ctx context.Context, q OpportunityQuery) ([]Oppo
 		if err != nil {
 			return err
 		}
-		out = append(out, Opportunity{Finding: f, Paths: paths})
+		out = append(out, Opportunity{Finding: f, Paths: paths, Missing: s.anyMissing(f.Paths)})
 		return nil
 	}
 
@@ -111,10 +147,69 @@ func (s *Service) Opportunities(ctx context.Context, q OpportunityQuery) ([]Oppo
 	return out, nil
 }
 
+// OpportunitiesReport is the single shape for opportunities output,
+// used by `opportunities --json` and by `export`. It records the root
+// and when it was measured alongside the findings.
+type OpportunitiesReport struct {
+	Root string
+	Freshness
+	// MinSize echoes the query's cut-off; OmittedCount and OmittedBytes
+	// say what it removed, so a filtered list never hides its size.
+	MinSize      int64 `json:",omitempty"`
+	OmittedCount int   `json:",omitempty"`
+	OmittedBytes int64 `json:",omitempty"`
+	// MissingCount is how many returned findings point at paths that no
+	// longer exist (see Opportunity.Missing).
+	MissingCount  int `json:",omitempty"`
+	Opportunities []Opportunity
+}
+
+// OpportunitiesReport runs Opportunities for q and wraps the result
+// with its root, freshness, and an account of anything filtered out.
+func (s *Service) OpportunitiesReport(ctx context.Context, q OpportunityQuery) (*OpportunitiesReport, error) {
+	all, err := s.opportunities(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	return s.OpportunitiesReportFrom(ctx, q, all)
+}
+
+// OpportunitiesReportFrom builds the report for q from an opportunity
+// list the caller already computed for q.Path (before any MinSize cut),
+// so a caller producing several outputs runs the detectors once.
+func (s *Service) OpportunitiesReportFrom(ctx context.Context, q OpportunityQuery, all []Opportunity) (*OpportunitiesReport, error) {
+	fresh, err := s.freshness(ctx, q.Path)
+	if err != nil {
+		return nil, err
+	}
+	kept, omitted, omittedBytes := partitionBySize(all, q.MinSize)
+
+	rep := &OpportunitiesReport{
+		Root: q.Path, Freshness: fresh,
+		MinSize: q.MinSize, OmittedCount: omitted, OmittedBytes: omittedBytes,
+		Opportunities: kept,
+	}
+	if rep.Opportunities == nil {
+		rep.Opportunities = []Opportunity{} // encode as [], not null
+	}
+	for _, o := range kept {
+		if o.Missing {
+			rep.MissingCount++
+		}
+	}
+	return rep, nil
+}
+
 // SavingsByTier totals allocated bytes per action-class tier.
 type SavingsByTier struct {
 	Path  string
 	Tiers map[policy.ActionClass]int64
+	Freshness
+	// MissingCount and MissingBytes cover findings (already included in
+	// Tiers) whose paths no longer exist: space the index still counts
+	// but the disk no longer holds. Rescan to refresh.
+	MissingCount int   `json:",omitempty"`
+	MissingBytes int64 `json:",omitempty"`
 }
 
 // Reclaimable totals the tiers that represent space a user could
@@ -140,9 +235,24 @@ func (s *Service) Savings(ctx context.Context, path string) (*SavingsByTier, err
 	if err != nil {
 		return nil, err
 	}
-	tiers := make(map[policy.ActionClass]int64)
-	for _, o := range opps {
-		tiers[o.Finding.ActionClass] += o.Finding.AllocatedSize
+	return s.SavingsFrom(ctx, path, opps)
+}
+
+// SavingsFrom totals an opportunity list the caller already computed
+// for path (with no size cut), so a caller producing several outputs
+// runs the detectors once.
+func (s *Service) SavingsFrom(ctx context.Context, path string, opps []Opportunity) (*SavingsByTier, error) {
+	fresh, err := s.freshness(ctx, path)
+	if err != nil {
+		return nil, err
 	}
-	return &SavingsByTier{Path: path, Tiers: tiers}, nil
+	out := &SavingsByTier{Path: path, Tiers: make(map[policy.ActionClass]int64), Freshness: fresh}
+	for _, o := range opps {
+		out.Tiers[o.Finding.ActionClass] += o.Finding.AllocatedSize
+		if o.Missing {
+			out.MissingCount++
+			out.MissingBytes += o.Finding.AllocatedSize
+		}
+	}
+	return out, nil
 }

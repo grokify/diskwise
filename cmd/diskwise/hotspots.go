@@ -43,6 +43,7 @@ func newHotspotsCmd() *cobra.Command {
 				report = rd.Hotspots(report)
 			}
 
+			warnStale(cmd, report.Freshness, len(report.MissingKnown), 0, report.Root)
 			asJSON, _ := cmd.Flags().GetBool("json")
 			if asJSON {
 				return printJSON(cmd.OutOrStdout(), report)
@@ -50,11 +51,20 @@ func newHotspotsCmd() *cobra.Command {
 
 			w := cmd.OutOrStdout()
 			fprintf(w, "Known locations under %s\n", report.Root)
+			printMeasured(w, report.Freshness)
+			missing := make(map[string]bool, len(report.MissingKnown))
+			for _, p := range report.MissingKnown {
+				missing[p] = true
+			}
 			if len(report.Known) == 0 {
 				fprintf(w, "  none found\n")
 			}
 			for _, f := range report.Known {
-				fprintf(w, "  %-10s [%s] %s\n", humanBytes(f.AllocatedSize), f.ActionClass, f.Path)
+				gone := ""
+				if missing[f.Path] {
+					gone = "  [missing]"
+				}
+				fprintf(w, "  %-10s [%s] %s%s\n", humanBytes(f.AllocatedSize), f.ActionClass, f.Path, gone)
 				fprintf(w, "             %s\n", f.Reason)
 			}
 

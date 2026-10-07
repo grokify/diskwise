@@ -13,14 +13,6 @@ import (
 	"github.com/grokify/diskwise/service"
 )
 
-// opportunitiesExport wraps the opportunities list with the root it was
-// computed for. `diskwise opportunities --json` keeps its bare array
-// for compatibility; every export file carries its Root instead.
-type opportunitiesExport struct {
-	Root          string
-	Opportunities []service.Opportunity
-}
-
 // pairsExport is the export envelope for archive pairs.
 type pairsExport struct {
 	Root  string
@@ -34,7 +26,7 @@ type exportFile struct {
 }
 
 func newExportCmd() *cobra.Command {
-	var outDir string
+	var outDir, minSizeFlag string
 	var withPairs bool
 
 	cmd := &cobra.Command{
@@ -43,7 +35,7 @@ func newExportCmd() *cobra.Command {
 		Long: `Write a consistent set of files for one scanned path into --out:
 
   savings.json        savings by tier
-  opportunities.json  every finding, as {"Root": ..., "Opportunities": [...]}
+  opportunities.json  findings, as the same report that "opportunities --json" prints
   hotspots.json       known locations and large unexplained directories
   review.md           checkbox worklist grouped by tier
   pairs.json          archive/directory comparisons (with --pairs)
@@ -69,11 +61,22 @@ Existing files are overwritten.`,
 
 			ctx := cmd.Context()
 			svc := service.New(db)
-			opps, err := svc.Opportunities(ctx, service.OpportunityQuery{Path: path})
+			minSize, err := parseSize(minSizeFlag)
 			if err != nil {
 				return err
 			}
-			savings, err := svc.Savings(ctx, path)
+			// Run the detectors once; the report applies the size cut and
+			// the savings totals use the full list.
+			all, err := svc.Opportunities(ctx, service.OpportunityQuery{Path: path})
+			if err != nil {
+				return err
+			}
+			rep, err := svc.OpportunitiesReportFrom(ctx, service.OpportunityQuery{Path: path, MinSize: minSize}, all)
+			if err != nil {
+				return err
+			}
+			warnStale(cmd, rep.Freshness, rep.MissingCount, 0, rep.Root)
+			savings, err := svc.SavingsFrom(ctx, path, all)
 			if err != nil {
 				return err
 			}
@@ -94,11 +97,11 @@ Existing files are overwritten.`,
 				return err
 			}
 			if rd != nil {
-				opps, savings, hot, pairs, root = rd.Opportunities(opps), rd.Savings(savings), rd.Hotspots(hot), rd.Pairs(pairs), rd.Path(path)
+				rep, savings, hot, pairs, root = rd.OpportunitiesReport(rep), rd.Savings(savings), rd.Hotspots(hot), rd.Pairs(pairs), rd.Path(path)
 			}
 
 			var review bytes.Buffer
-			if err := report.WriteMarkdown(&review, root, report.Rows(opps), pairs); err != nil {
+			if err := report.WriteMarkdown(&review, root, report.Rows(rep.Opportunities), pairs, report.MetaFrom(rep)); err != nil {
 				return err
 			}
 
@@ -107,7 +110,7 @@ Existing files are overwritten.`,
 			}
 			files := []exportFile{
 				{"savings.json", func() ([]byte, error) { return jsonBytes(savings) }},
-				{"opportunities.json", func() ([]byte, error) { return jsonBytes(opportunitiesExport{Root: root, Opportunities: opps}) }},
+				{"opportunities.json", func() ([]byte, error) { return jsonBytes(rep) }},
 				{"hotspots.json", func() ([]byte, error) { return jsonBytes(hot) }},
 				{"review.md", func() ([]byte, error) { return review.Bytes(), nil }},
 			}
@@ -129,6 +132,7 @@ Existing files are overwritten.`,
 		},
 	}
 	cmd.Flags().StringVar(&outDir, "out", "", "directory to write into (created if missing; required)")
+	cmd.Flags().StringVar(&minSizeFlag, "min-size", "1mb", "omit findings smaller than this from opportunities.json and review.md (0 keeps everything); the omitted count is recorded in both")
 	cmd.Flags().BoolVar(&withPairs, "pairs", false, "also compare archives with extracted directories (reads archive member lists)")
 	addRedactFlags(cmd)
 	return cmd

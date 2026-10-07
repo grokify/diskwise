@@ -52,6 +52,7 @@ func newSavingsCmd() *cobra.Command {
 				savings = rd.Savings(savings)
 			}
 
+			warnStale(cmd, savings.Freshness, savings.MissingCount, savings.MissingBytes, savings.Path)
 			asJSON, _ := cmd.Flags().GetBool("json")
 			if asJSON {
 				return printJSON(cmd.OutOrStdout(), savings)
@@ -59,7 +60,9 @@ func newSavingsCmd() *cobra.Command {
 
 			w := cmd.OutOrStdout()
 			fprintf(w, "Potential savings under %s: %s\n", savings.Path, humanBytes(savings.Reclaimable()))
-			fprintf(w, "(excludes KEEP and UNKNOWN; UNKNOWN is unexplained large directories, not a savings estimate)\n\n")
+			fprintf(w, "(excludes KEEP and UNKNOWN; UNKNOWN is unexplained large directories, not a savings estimate)\n")
+			printMeasured(w, savings.Freshness)
+			fprintf(w, "\n")
 
 			seen := make(map[policy.ActionClass]bool, len(tierDisplayOrder))
 			for _, tier := range tierDisplayOrder {

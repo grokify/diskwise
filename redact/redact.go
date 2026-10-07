@@ -165,14 +165,17 @@ func (r *Redactor) paths(in []string) []string {
 func (r *Redactor) Opportunities(opps []service.Opportunity) []service.Opportunity {
 	out := make([]service.Opportunity, len(opps))
 	for i, o := range opps {
-		out[i] = service.Opportunity{Finding: r.Finding(o.Finding), Paths: r.paths(o.Paths)}
+		out[i] = service.Opportunity{Finding: r.Finding(o.Finding), Paths: r.paths(o.Paths), Missing: o.Missing}
 	}
 	return out
 }
 
 // Hotspots returns a redacted copy of rep.
 func (r *Redactor) Hotspots(rep *service.HotspotsReport) *service.HotspotsReport {
-	out := &service.HotspotsReport{Root: r.Path(rep.Root)}
+	out := &service.HotspotsReport{Root: r.Path(rep.Root), Freshness: rep.Freshness}
+	for _, p := range rep.MissingKnown {
+		out.MissingKnown = append(out.MissingKnown, r.Path(p))
+	}
 	for _, f := range rep.Known {
 		out.Known = append(out.Known, r.Finding(f))
 	}
@@ -184,7 +187,17 @@ func (r *Redactor) Hotspots(rep *service.HotspotsReport) *service.HotspotsReport
 
 // Savings returns a redacted copy of s (only its root path is a path).
 func (r *Redactor) Savings(s *service.SavingsByTier) *service.SavingsByTier {
-	return &service.SavingsByTier{Path: r.Path(s.Path), Tiers: s.Tiers}
+	out := *s
+	out.Path = r.Path(s.Path)
+	return &out
+}
+
+// OpportunitiesReport returns a redacted copy of rep.
+func (r *Redactor) OpportunitiesReport(rep *service.OpportunitiesReport) *service.OpportunitiesReport {
+	out := *rep
+	out.Root = r.Path(rep.Root)
+	out.Opportunities = r.Opportunities(rep.Opportunities)
+	return &out
 }
 
 // Pairs returns redacted copies of pairs. A pair is redacted as a

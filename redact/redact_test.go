@@ -3,6 +3,7 @@ package redact
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/grokify/diskwise/detect"
 	"github.com/grokify/diskwise/entity"
@@ -116,5 +117,35 @@ func TestPairs(t *testing.T) {
 	}
 	if in[0].Archive != "/Users/example/work/payroll.tar" {
 		t.Error("Pairs must not mutate its input")
+	}
+}
+
+// The newer result fields must survive redaction: dropping them would
+// quietly turn a stale, filtered report into a complete-looking one.
+func TestRedaction_PreservesFreshnessAndFilters(t *testing.T) {
+	r := New(home, []string{"~/work"})
+	at := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+	fresh := service.Freshness{ScannedAt: at, ScanStatus: "partial", Stale: true}
+	f := detect.Finding{Path: "/Users/example/work/x", Paths: []string{"/Users/example/work/x"}}
+
+	rep := r.OpportunitiesReport(&service.OpportunitiesReport{
+		Root: home, Freshness: fresh, MinSize: 5, OmittedCount: 2, OmittedBytes: 9, MissingCount: 1,
+		Opportunities: []service.Opportunity{{Finding: f, Paths: f.Paths, Missing: true}},
+	})
+	if rep.Root != "~" || rep.Freshness != fresh || rep.MinSize != 5 || rep.OmittedCount != 2 || rep.OmittedBytes != 9 || rep.MissingCount != 1 {
+		t.Errorf("report fields lost: %+v", rep)
+	}
+	if !rep.Opportunities[0].Missing || !strings.HasPrefix(rep.Opportunities[0].Finding.Path, "<redacted:") {
+		t.Errorf("opportunity not redacted or lost Missing: %+v", rep.Opportunities[0])
+	}
+
+	sav := r.Savings(&service.SavingsByTier{Path: home, Freshness: fresh, MissingCount: 3, MissingBytes: 7})
+	if sav.Path != "~" || sav.Freshness != fresh || sav.MissingCount != 3 || sav.MissingBytes != 7 {
+		t.Errorf("savings fields lost: %+v", sav)
+	}
+
+	hot := r.Hotspots(&service.HotspotsReport{Root: home, Freshness: fresh, MissingKnown: []string{"/Users/example/work/x", "/Users/example/Downloads/y"}})
+	if hot.Freshness != fresh || !strings.HasPrefix(hot.MissingKnown[0], "<redacted:") || hot.MissingKnown[1] != "~/Downloads/y" {
+		t.Errorf("hotspots fields lost or unredacted: %+v", hot)
 	}
 }

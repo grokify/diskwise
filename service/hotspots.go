@@ -23,9 +23,13 @@ type HotspotsQuery struct {
 // large subtrees no known location explains, per TRD §4.1 — the
 // "worth exploring" list.
 type HotspotsReport struct {
-	Root        string
+	Root string
+	Freshness
 	Known       []detect.Finding
 	Unexplained []detect.Finding
+	// MissingKnown lists known-location paths the index still counts but
+	// that no longer exist on disk (rescan to refresh).
+	MissingKnown []string `json:",omitempty"`
 }
 
 // Hotspots reports known heavy storage locations and large
@@ -65,5 +69,16 @@ func (s *Service) Hotspots(ctx context.Context, q HotspotsQuery) (*HotspotsRepor
 		return nil, fmt.Errorf("service: hotspots %s: %w", q.Path, err)
 	}
 
-	return &HotspotsReport{Root: q.Path, Known: known, Unexplained: unexplained}, nil
+	fresh, err := s.freshness(ctx, q.Path)
+	if err != nil {
+		return nil, err
+	}
+	var missing []string
+	for _, f := range known {
+		if s.anyMissing(f.Paths) {
+			missing = append(missing, f.Path)
+		}
+	}
+
+	return &HotspotsReport{Root: q.Path, Freshness: fresh, Known: known, Unexplained: unexplained, MissingKnown: missing}, nil
 }

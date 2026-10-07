@@ -27,6 +27,8 @@ type Row struct {
 	Reason        string
 	PathCount     int
 	Scenarios     []detect.Scenario
+	// Missing is true when the finding's path no longer exists on disk.
+	Missing bool
 }
 
 // tierOrder is most-actionable first, matching how a user triages:
@@ -65,6 +67,7 @@ func Rows(opps []service.Opportunity) []Row {
 			Reason:        o.Finding.Reason,
 			PathCount:     len(o.Paths),
 			Scenarios:     o.Finding.Scenarios,
+			Missing:       o.Missing,
 		}
 	}
 	sort.Slice(rows, func(i, j int) bool {

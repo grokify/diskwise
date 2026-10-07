@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/grokify/diskwise/detect"
 	"github.com/grokify/diskwise/policy"
+	"github.com/grokify/diskwise/service"
 )
 
 // tierHeading is the review-worklist heading for each tier, and
@@ -32,13 +34,36 @@ var tierBlurb = map[policy.ActionClass]string{
 // reclaimable reports whether a tier counts toward the savings total.
 func reclaimable(t policy.ActionClass) bool { return t != policy.Keep && t != policy.Unknown }
 
+// Meta carries what a reader needs to judge a worklist: when the data
+// was measured, and what was left out or has since disappeared. The
+// zero value omits all of it.
+type Meta struct {
+	ScannedAt    time.Time
+	ScanStatus   string
+	Stale        bool
+	MinSize      int64
+	OmittedCount int
+	OmittedBytes int64
+	MissingCount int
+}
+
+// MetaFrom extracts a worklist's Meta from an opportunities report.
+func MetaFrom(rep *service.OpportunitiesReport) Meta {
+	return Meta{
+		ScannedAt: rep.ScannedAt, ScanStatus: rep.ScanStatus, Stale: rep.Stale,
+		MinSize: rep.MinSize, OmittedCount: rep.OmittedCount, OmittedBytes: rep.OmittedBytes,
+		MissingCount: rep.MissingCount,
+	}
+}
+
 // WriteMarkdown renders rows (and optionally archive/directory pairs)
 // as a checkbox worklist grouped by tier, for human review. Tick an
 // item to mark it for removal; DiskWise itself never acts on the file.
-// Rendering is a pure function of its inputs — no timestamps — so the
-// same findings always produce the same document and diffs stay quiet.
+// Rendering is a pure function of its inputs. The only time shown is when
+// the data was measured (from the index, not the clock), so the same
+// findings always produce the same document and diffs stay quiet.
 // Every list is preceded by a blank line, per the repo's Markdown rules.
-func WriteMarkdown(w io.Writer, root string, rows []Row, pairs []detect.ArchivePair) error {
+func WriteMarkdown(w io.Writer, root string, rows []Row, pairs []detect.ArchivePair, meta Meta) error {
 	var b strings.Builder
 	var total int64
 	for _, r := range rows {
@@ -48,7 +73,25 @@ func WriteMarkdown(w io.Writer, root string, rows []Row, pairs []detect.ArchiveP
 	}
 
 	fmt.Fprintf(&b, "# DiskWise review: %s\n\n", root)
-	fmt.Fprintf(&b, "Potential savings: **%s** (excludes keep and unexplained). Nothing here has been changed.\n\n", humanBytes(total))
+	fmt.Fprintf(&b, "Potential savings listed: **%s** (excludes keep and unexplained). Nothing here has been changed.\n\n", humanBytes(total))
+
+	if !meta.ScannedAt.IsZero() {
+		fmt.Fprintf(&b, "Measured %s", meta.ScannedAt.UTC().Format("2006-01-02 15:04 UTC"))
+		if meta.ScanStatus == "partial" {
+			b.WriteString(" (partial scan: some directories were not readable)")
+		}
+		b.WriteString(".\n\n")
+	}
+	if meta.Stale {
+		b.WriteString("> **This data is more than a week old.** Run `diskwise scan` to refresh it before acting.\n\n")
+	}
+	if meta.MissingCount > 0 {
+		fmt.Fprintf(&b, "> **%d finding(s) no longer exist on disk** (marked below). The index predates their removal; `diskwise rescan` their parent paths.\n\n", meta.MissingCount)
+	}
+	if meta.OmittedCount > 0 {
+		fmt.Fprintf(&b, "%d smaller finding(s) totalling %s are omitted (under %s). Re-run with `--min-size 0` to list them.\n\n",
+			meta.OmittedCount, humanBytes(meta.OmittedBytes), humanBytes(meta.MinSize))
+	}
 
 	byTier := make(map[policy.ActionClass][]Row)
 	var order []policy.ActionClass
@@ -73,7 +116,11 @@ func WriteMarkdown(w io.Writer, root string, rows []Row, pairs []detect.ArchiveP
 			fmt.Fprintf(&b, "%s\n\n", blurb)
 		}
 		for _, r := range byTier[tier] {
-			fmt.Fprintf(&b, "- [ ] **%s** %s `%s`\n", humanBytes(r.AllocatedSize), r.Kind, mdCode(r.Path))
+			gone := ""
+			if r.Missing {
+				gone = " _(no longer exists)_"
+			}
+			fmt.Fprintf(&b, "- [ ] **%s** %s `%s`%s\n", humanBytes(r.AllocatedSize), r.Kind, mdCode(r.Path), gone)
 			if r.Reason != "" {
 				fmt.Fprintf(&b, "  - %s\n", r.Reason)
 			}

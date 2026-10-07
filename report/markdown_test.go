@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/grokify/diskwise/detect"
 	"github.com/grokify/diskwise/entity"
@@ -34,7 +35,7 @@ func TestWriteMarkdown_GroupsByTierWithCheckboxes(t *testing.T) {
 			Scenarios: []detect.Scenario{{Name: "keep-newest", Description: "Keep v2", ReclaimableBytes: 512 << 20}}},
 	}
 	var buf strings.Builder
-	if err := WriteMarkdown(&buf, "/root", sortedRows(rows), nil); err != nil {
+	if err := WriteMarkdown(&buf, "/root", sortedRows(rows), nil, Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	out := buf.String()
@@ -65,7 +66,7 @@ func TestWriteMarkdown_BlankLineBeforeLists(t *testing.T) {
 	rows := []Row{{Tier: policy.SafeDelete, Kind: entity.KindCache, Path: "/c", AllocatedSize: 1 << 20, Reason: "r"}}
 	pairs := []detect.ArchivePair{{Archive: "/a.tar", Dir: "/a", Verdict: detect.PairSame, Compared: detect.CompareAllFiles}}
 	var buf strings.Builder
-	if err := WriteMarkdown(&buf, "/root", rows, pairs); err != nil {
+	if err := WriteMarkdown(&buf, "/root", rows, pairs, Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	lines := strings.Split(buf.String(), "\n")
@@ -84,7 +85,7 @@ func TestWriteMarkdown_PairsSectionAndDeterminism(t *testing.T) {
 	}
 	render := func() string {
 		var buf strings.Builder
-		if err := WriteMarkdown(&buf, "/root", nil, pairs); err != nil {
+		if err := WriteMarkdown(&buf, "/root", nil, pairs, Meta{}); err != nil {
 			t.Fatal(err)
 		}
 		return buf.String()
@@ -102,5 +103,45 @@ func TestWriteMarkdown_PairsSectionAndDeterminism(t *testing.T) {
 	}
 	if out != render() {
 		t.Error("output must be deterministic")
+	}
+}
+
+func TestWriteMarkdown_MetaSurfacesStalenessMissingAndOmissions(t *testing.T) {
+	rows := []Row{
+		{Tier: policy.SafeDelete, Kind: entity.KindCache, Path: "/gone/cache", AllocatedSize: 2 << 30, Missing: true},
+		{Tier: policy.SafeDelete, Kind: entity.KindCache, Path: "/here/cache", AllocatedSize: 1 << 30},
+	}
+	meta := Meta{
+		ScannedAt: time.Date(2026, 3, 4, 5, 6, 0, 0, time.FixedZone("x", 3600)), ScanStatus: "partial", Stale: true,
+		MinSize: 1 << 20, OmittedCount: 40, OmittedBytes: 5 << 20, MissingCount: 1,
+	}
+	var buf strings.Builder
+	if err := WriteMarkdown(&buf, "/root", rows, nil, meta); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{
+		"Measured 2026-03-04 04:06 UTC (partial scan",
+		"more than a week old",
+		"1 finding(s) no longer exist on disk",
+		"40 smaller finding(s) totalling 5.0 MiB are omitted (under 1.0 MiB)",
+		"`/gone/cache` _(no longer exists)_",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "`/here/cache` _(no longer") {
+		t.Error("an existing path must not be marked missing")
+	}
+
+	var plain strings.Builder
+	if err := WriteMarkdown(&plain, "/root", rows, nil, Meta{}); err != nil {
+		t.Fatal(err)
+	}
+	for _, absent := range []string{"Measured", "week old", "omitted"} {
+		if strings.Contains(plain.String(), absent) {
+			t.Errorf("zero Meta must add nothing, but output contains %q", absent)
+		}
 	}
 }

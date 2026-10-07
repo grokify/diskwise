@@ -9,7 +9,7 @@ import (
 )
 
 func newOpportunitiesCmd() *cobra.Command {
-	var actionFlag, typeFlag string
+	var actionFlag, typeFlag, minSizeFlag string
 	var minConfidence float64
 	var pathsOnly bool
 
@@ -30,11 +30,16 @@ func newOpportunitiesCmd() *cobra.Command {
 			}
 			defer func() { _ = db.Close() }()
 
-			opps, err := service.New(db).Opportunities(cmd.Context(), service.OpportunityQuery{
+			minSize, err := parseSize(minSizeFlag)
+			if err != nil {
+				return err
+			}
+			rep, err := service.New(db).OpportunitiesReport(cmd.Context(), service.OpportunityQuery{
 				Path:          path,
 				ActionClass:   policy.ActionClass(actionFlag),
 				MinConfidence: minConfidence,
 				Kind:          entity.Kind(typeFlag),
+				MinSize:       minSize,
 			})
 			if err != nil {
 				return err
@@ -44,12 +49,14 @@ func newOpportunitiesCmd() *cobra.Command {
 				return err
 			}
 			if rd != nil {
-				opps = rd.Opportunities(opps)
+				rep = rd.OpportunitiesReport(rep)
 			}
+			opps := rep.Opportunities
 
 			asJSON, _ := cmd.Flags().GetBool("json")
+			warnStale(cmd, rep.Freshness, rep.MissingCount, 0, rep.Root)
 			if asJSON {
-				return printJSON(cmd.OutOrStdout(), opps)
+				return printJSON(cmd.OutOrStdout(), rep)
 			}
 
 			w := cmd.OutOrStdout()
@@ -62,6 +69,10 @@ func newOpportunitiesCmd() *cobra.Command {
 				return nil
 			}
 
+			printMeasured(w, rep.Freshness)
+			if rep.OmittedCount > 0 {
+				fprintf(w, "%d smaller finding(s) (%s) omitted; --min-size 0 lists them\n", rep.OmittedCount, humanBytes(rep.OmittedBytes))
+			}
 			byTier := make(map[policy.ActionClass][]service.Opportunity)
 			var order []policy.ActionClass
 			for _, o := range opps {
@@ -73,7 +84,11 @@ func newOpportunitiesCmd() *cobra.Command {
 			for _, tier := range order {
 				fprintf(w, "%s\n", tier)
 				for _, o := range byTier[tier] {
-					fprintf(w, "  %-10s %-6s %s\n", humanBytes(o.Finding.AllocatedSize), o.Finding.Entity.Kind, o.Finding.Path)
+					gone := ""
+					if o.Missing {
+						gone = "  [missing]"
+					}
+					fprintf(w, "  %-10s %-6s %s%s\n", humanBytes(o.Finding.AllocatedSize), o.Finding.Entity.Kind, o.Finding.Path, gone)
 					fprintf(w, "             %s\n", o.Finding.Reason)
 					for _, sc := range o.Finding.Scenarios {
 						fprintf(w, "             [%s] %s — %s\n", sc.Name, humanBytes(sc.ReclaimableBytes), sc.Description)
@@ -86,6 +101,7 @@ func newOpportunitiesCmd() *cobra.Command {
 	cmd.Flags().StringVar(&actionFlag, "action", "", "filter to one action class (safe_delete, likely_safe, backup_then_delete, review, keep, unknown)")
 	cmd.Flags().Float64Var(&minConfidence, "min-confidence", 0, "hide findings below this detection confidence (0-1)")
 	cmd.Flags().StringVar(&typeFlag, "type", "", "filter to one entity kind (cache, archive, artifact_family, ...)")
+	cmd.Flags().StringVar(&minSizeFlag, "min-size", "", "hide findings smaller than this (e.g. 1mb); the count hidden is reported")
 	cmd.Flags().BoolVar(&pathsOnly, "paths", false, "print one actionable path per line instead of a table")
 	addRedactFlags(cmd)
 	return cmd

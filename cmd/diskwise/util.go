@@ -9,11 +9,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/grokify/diskwise/index"
 	"github.com/grokify/diskwise/redact"
+	"github.com/grokify/diskwise/service"
 )
 
 // defaultDBPath returns the standard per-user location for the
@@ -182,5 +184,48 @@ func redactorFor(cmd *cobra.Command) (*redact.Redactor, error) {
 func archiveProgress(cmd *cobra.Command) func(string, int64) {
 	return func(archive string, size int64) {
 		fprintf(cmd.ErrOrStderr(), "diskwise: reading %s (%s)\n", archive, humanBytes(size))
+	}
+}
+
+// humanAge renders how long ago something was, coarsely ("3 days ago").
+func humanAge(d time.Duration) string {
+	switch {
+	case d < time.Minute:
+		return "just now"
+	case d < time.Hour:
+		return fmt.Sprintf("%d min ago", int(d.Minutes()))
+	case d < 48*time.Hour:
+		return fmt.Sprintf("%d hours ago", int(d.Hours()))
+	default:
+		return fmt.Sprintf("%d days ago", int(d.Hours()/24))
+	}
+}
+
+// printMeasured writes the "Measured ..." line that tells a reader how
+// old the numbers below it are.
+func printMeasured(w io.Writer, f service.Freshness) {
+	if f.ScannedAt.IsZero() {
+		return
+	}
+	fprintf(w, "Measured %s (%s)", f.ScannedAt.Format("2006-01-02 15:04 UTC"), humanAge(time.Since(f.ScannedAt)))
+	if f.ScanStatus == "partial" {
+		fprintf(w, "; partial scan")
+	}
+	fprintf(w, "\n")
+}
+
+// warnStale writes warnings to stderr (so stdout and --json stay clean)
+// when the data is old or points at paths that have since disappeared.
+func warnStale(cmd *cobra.Command, f service.Freshness, missing int, missingBytes int64, root string) {
+	w := cmd.ErrOrStderr()
+	if f.Stale {
+		fprintf(w, "diskwise: warning: this scan is %s; run `diskwise scan %s` to refresh it\n", humanAge(time.Since(f.ScannedAt)), root)
+	}
+	if missing > 0 {
+		detail := ""
+		if missingBytes > 0 {
+			detail = fmt.Sprintf(" (%s)", humanBytes(missingBytes))
+		}
+		fprintf(w, "diskwise: warning: %d finding(s)%s point at paths that no longer exist; the index predates their removal; run `diskwise rescan` on their parent paths\n", missing, detail)
 	}
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/grokify/diskwise/index"
 	"github.com/grokify/diskwise/knowledge"
@@ -18,11 +19,15 @@ type Service struct {
 	db       *index.DB
 	registry knowledge.Registry
 	probe    SystemProbe
+	// now and exists are clock and filesystem seams for staleness checks
+	// (tests substitute fixed ones).
+	now    func() time.Time
+	exists func(string) bool
 }
 
 // New returns a Service backed by db, using the built-in known-location registry.
 func New(db *index.DB) *Service {
-	return &Service{db: db, registry: knowledge.Default, probe: platform.System{}}
+	return &Service{db: db, registry: knowledge.Default, probe: platform.System{}, now: time.Now, exists: pathExists}
 }
 
 // WithRegistry overrides the knowledge registry (primarily for tests,
