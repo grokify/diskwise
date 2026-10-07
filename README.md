@@ -111,13 +111,14 @@ diskwise savings ~
 ```
 
 ```
-Potential savings under /Users/you: 2.8 TiB
+Potential savings under /Users/you: 335.1 GiB
+(excludes KEEP and UNKNOWN; UNKNOWN is unexplained large directories, not a savings estimate)
 
   SAFE DELETE          83.6 GiB
   LIKELY SAFE          11.0 GiB
-  REVIEW               240.2 GiB
-  KEEP                 0 B
-  UNKNOWN              2.5 TiB
+  REVIEW               240.5 GiB
+  KEEP                 98.1 GiB
+  UNKNOWN              790.0 GiB
 ```
 
 Tiers, most-actionable first:
@@ -128,7 +129,8 @@ Tiers, most-actionable first:
 | `likely_safe` | Probably safe, lower confidence (e.g. an extraction sibling exists) |
 | `backup_then_delete` | Managed data (databases, containers, VMs, apps) — never auto-promoted higher, regardless of confidence |
 | `review` | Needs a human look before acting |
-| `keep` / `unknown` | Not a reclaim candidate, or no classification was possible |
+| `keep` | Explained but not for removal here — e.g. an app-managed bundle such as a Photos library |
+| `unknown` | Large directories no detector explains (outermost only; bytes other findings already report are excluded) |
 
 Drill into one tier, or one entity kind, or filter by confidence:
 
@@ -142,14 +144,51 @@ diskwise opportunities ~ --paths | xargs -I{} du -sh {}   # pipe actionable path
 Every command accepts `--json` for scripting instead of the
 human-readable table.
 
-### 4. Generate a shareable report
+### 4. Check an upgrade's space requirement
+
+```bash
+diskwise preflight --need 50gib
+```
+
+Reports capacity, available space, the APFS container's free space and
+Time Machine local snapshots, and exits non-zero when the volume is short,
+so it can gate a script. Purgeable space is not measurable from the
+command line and is not counted.
+
+### 5. Compare archives with their extracted copies
+
+```bash
+diskwise pairs ~/Downloads
+```
+
+For each archive (`.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.zip`) beside a
+directory of the same name, compares file counts and bytes and reports
+`same`, `same_count`, `archive_has_more` or `dir_has_more`. Nothing is
+extracted and contents are not hashed, so `same` is strong evidence, not
+proof. For a Photos library only original media is compared, since its
+internal layout changes between app versions.
+
+### 6. Generate a shareable report
 
 ```bash
 diskwise report ~ --format html --out report.html    # self-contained, sortable/filterable
 diskwise report ~ --format xlsx --out report.xlsx     # frozen header, autofilter
+diskwise review ~ --out review.md                    # checkbox worklist grouped by tier
+diskwise export ~ --out ./diskwise-export             # savings/opportunities/hotspots JSON + review.md
 ```
 
-### 5. Narrative analysis (insights)
+`review` writes a Markdown checklist (deterministic, no timestamps) you
+tick through and act on yourself — DiskWise never deletes anything.
+`export` writes a consistent set of files, each recording the root it was
+computed for; add `--pairs` to include archive comparisons.
+
+**Sharing safely.** `opportunities`, `hotspots`, `savings`, `pairs`,
+`report`, `review` and `export` accept `--redact` (home directory shown as
+`~`) and `--redact-prefix PATH` (repeatable): everything under a prefix is
+replaced with a stable opaque token like `<redacted:1a2b3c4d>`, including
+names and descriptions derived from those paths.
+
+### 7. Narrative analysis (insights)
 
 DiskWise's detectors are deliberately conservative — they never guess.
 Patterns like "this is a duplicate 2022 migration backup" or "this

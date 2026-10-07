@@ -3,7 +3,7 @@
 **Initiative:** `INIT-DISKWISE-001`
 **Repository:** `github.com/grokify/diskwise`
 
-**Status:** v0.1.0 released 2026-08-22 (Phases 1–3, 6 and 7 done; Phases 4–5 and 8 planned)
+**Status:** v0.1.0 released 2026-08-22; Phases 1–3 and 6 shipped in it, Phases 7–8 are done since (unreleased), Phases 4–5 planned
 **RMI slug:** `DISKWISE`
 
 Phase status is always derived from member RMI statuses, never set directly. Review and execution happen by phase. Commits implementing an RMI carry the git trailer `Refs: RMI-DISKWISE-NNN`.
@@ -74,12 +74,12 @@ Not part of the original PRD/TRD phased plan; added after dogfooding on a full h
 ## Phase 8 — Upgrade Readiness & Review Workflow
 **Theme:** Answer "do I have enough room for X?" directly, and turn findings into a reviewable, shareable worklist without hand-assembly.
 
-- [ ] `RMI-DISKWISE-032` `preflight --need <size>`: free space, purgeable space and local snapshots (read-only), with a yes/no verdict
-- [ ] `RMI-DISKWISE-033` Archive/extracted-pair detection: pair an archive with a sibling directory, compare file counts and sizes, report same vs differs
-- [ ] `RMI-DISKWISE-034` Bundle-aware classification: managed bundles (e.g. `.photoslibrary`) reported as managed with layout-aware guidance, not "unknown"
-- [ ] `RMI-DISKWISE-035` `review --format md`: checkbox worklist grouped by tier, generated from opportunities
-- [ ] `RMI-DISKWISE-036` Consistent JSON export: `export --all <dir>` with an explicit root, and `Root` present in every JSON output
-- [ ] `RMI-DISKWISE-037` Path redaction (`--redact` or prefix allow/deny list) for reports and JSON intended to be shared
+- [x] `RMI-DISKWISE-032` `preflight --need <size>`: free space, APFS container free space and Time Machine local snapshots (read-only), with a yes/no verdict and a non-zero exit when insufficient; purgeable space is called out as not measurable rather than estimated
+- [x] `RMI-DISKWISE-033` `pairs`: compare an archive with its sibling extracted directory by file count and bytes (same, same_count, archive_has_more, dir_has_more); Photos libraries compared on original media only; plain `.tar` now recognized as an archive
+- [x] `RMI-DISKWISE-034` Bundle-aware classification: managed bundles (e.g. `.photoslibrary`) reported as keep-tier `managed_bundle` findings instead of "unknown", with no byte reported twice
+- [x] `RMI-DISKWISE-035` `review --format md`: checkbox worklist grouped by tier, deterministic output, optional archive-pair section
+- [x] `RMI-DISKWISE-036` `export --out <dir>`: savings, opportunities, hotspots, review (and pairs with `--pairs`) with the scanned root recorded in every JSON file; `opportunities --json` keeps its bare array for compatibility
+- [x] `RMI-DISKWISE-037` Path redaction: `--redact` abbreviates the home directory, `--redact-prefix` replaces everything under a prefix with a stable opaque token, applied to opportunities, hotspots, savings, report, pairs, review and export
 
 ## Post-V1 backlog (unphased)
 
