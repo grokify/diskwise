@@ -198,6 +198,9 @@ func TestWalk_DeniedDirectory(t *testing.T) {
 	if stats.DeniedPaths < 1 {
 		t.Errorf("DeniedPaths = %d, want >= 1", stats.DeniedPaths)
 	}
+	if len(stats.DeniedSample) != 1 || stats.DeniedSample[0] != blockedNode.Path {
+		t.Errorf("DeniedSample = %v, want [%s]", stats.DeniedSample, blockedNode.Path)
+	}
 	if rootNode.State != StatePartial {
 		t.Errorf("root State = %v, want StatePartial (has a denied descendant)", rootNode.State)
 	}

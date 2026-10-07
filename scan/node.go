@@ -76,4 +76,13 @@ type Stats struct {
 	CrossDeviceSkipped  int64
 	DuplicateFiles      int64
 	DuplicateBytesSaved int64 // allocated bytes not double-counted due to hard-link dedup
+
+	// DeniedSample lists up to MaxDeniedSample unreadable directories in
+	// tree order. It is populated once, when Walk finishes — unlike the counters above it is not safe to poll
+	// live. DeniedPaths is the full count; entries that could not even be
+	// stat'ed are counted there but never appear here.
+	DeniedSample []string
 }
+
+// MaxDeniedSample caps Stats.DeniedSample.
+const MaxDeniedSample = 200

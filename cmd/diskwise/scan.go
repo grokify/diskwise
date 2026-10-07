@@ -16,13 +16,17 @@ func newScanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Scan a directory and record its storage usage in the index",
-		Args:  cobra.MaximumNArgs(1),
+		Long: `Scan a directory and record its storage usage in the index.
+
+macOS attributes file access to the app that launched the scan. Run it
+from Terminal (or iTerm), not from inside another app's embedded
+terminal, or that app is the one that receives the Photos/Desktop/
+Documents permission prompts. For a complete scan, grant your terminal
+Full Disk Access (System Settings > Privacy & Security > Full Disk
+Access).`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			raw := "."
-			if len(args) == 1 {
-				raw = args[0]
-			}
-			root, err := resolvePath(raw)
+			root, err := pathArg(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -70,7 +74,8 @@ func printScanResult(w io.Writer, result *service.ScanResult) {
 		fprintf(w, "  symlinks: %d\n", result.Stats.SymlinksScanned)
 	}
 	if result.Stats.DeniedPaths > 0 {
-		fprintf(w, "  denied:  %d (inaccessible; run with elevated permissions to include them)\n", result.Stats.DeniedPaths)
+		fprintf(w, "  denied:  %d inaccessible\n", result.Stats.DeniedPaths)
+		printDenied(w, result.Stats.DeniedSample)
 	}
 	if result.Stats.CrossDeviceSkipped > 0 {
 		fprintf(w, "  skipped: %d other-volume directories (use --cross-device to include them)\n", result.Stats.CrossDeviceSkipped)
@@ -78,4 +83,21 @@ func printScanResult(w io.Writer, result *service.ScanResult) {
 	if result.Stats.DuplicateFiles > 0 {
 		fprintf(w, "  dedup:   %d hard-linked files, %s not double-counted\n", result.Stats.DuplicateFiles, humanBytes(result.Stats.DuplicateBytesSaved))
 	}
+}
+
+// deniedShown caps how many unreadable directories the scan summary lists.
+const deniedShown = 10
+
+// printDenied lists a sample of unreadable directories and what to do
+// about them. Elevated permissions (sudo) generally do not help: the
+// blocks are macOS privacy protections granted per app, not Unix modes.
+func printDenied(w io.Writer, sample []string) {
+	for i, p := range sample {
+		if i == deniedShown {
+			fprintf(w, "           ... and %d more\n", len(sample)-deniedShown)
+			break
+		}
+		fprintf(w, "           %s\n", p)
+	}
+	fprintf(w, "           grant your terminal Full Disk Access (System Settings > Privacy & Security), then `diskwise rescan` the paths above\n")
 }

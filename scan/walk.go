@@ -113,8 +113,30 @@ func Walk(ctx context.Context, root string, opts Options) (*Node, *Stats, error)
 	workerWG.Wait()
 
 	rollup(rootNode, opts.OnComplete)
+	stats.DeniedSample = collectDenied(rootNode, MaxDeniedSample)
 
 	return rootNode, stats, ctx.Err()
+}
+
+// collectDenied returns up to limit paths of directories that could
+// not be read, in tree order.
+func collectDenied(root *Node, limit int) []string {
+	var out []string
+	var visit func(n *Node)
+	visit = func(n *Node) {
+		if len(out) >= limit {
+			return
+		}
+		if n.State == StateDenied {
+			out = append(out, n.Path)
+			return
+		}
+		for _, c := range n.Children {
+			visit(c)
+		}
+	}
+	visit(root)
+	return out
 }
 
 // expandDir reads one directory's entries, stats each child, applies
