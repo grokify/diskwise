@@ -7,6 +7,44 @@
   "maintainers": ["grokify", "johncwang@gmail.com"],
   "releases": [
     {
+      "version": "v0.2.0",
+      "date": "2026-10-07",
+      "commit": "c29313e",
+      "highlights": [
+        { "description": "Totals that add up and say how old they are: unexplained directories are disjoint with already-explained bytes subtracted, savings no longer counts the unknown tier, and results show when they were measured and flag findings whose paths have since been removed.", "commit": "d7cae79" },
+        { "description": "New commands: `preflight` (free space for an upgrade), `pairs` (archives vs. extracted copies), `review` (checkbox worklist), and `export` (a consistent set of JSON files), with `--redact` / `--redact-prefix` to share output safely.", "commit": "d023290" },
+        { "description": "First MkDocs user guide, deployed to GitHub Pages.", "commit": "fec18d5" }
+      ],
+      "breaking": [
+        { "description": "`opportunities --json` now prints an object (`Root`, `ScannedAt`, `ScanStatus`, `Stale`, `Opportunities`, ...) instead of a bare array, matching `export`'s `opportunities.json`; `savings` no longer counts the keep and unknown tiers in its headline total", "commit": "c29313e" }
+      ],
+      "added": [
+        { "description": "`preflight` command: capacity, available space, APFS container free space and local snapshots against a `--need` requirement, exiting non-zero when short", "commit": "62a2445" },
+        { "description": "`pairs` command: compare archives with the same-named directory beside them by file count and bytes, comparing Photos library originals only", "commit": "fee6631" },
+        { "description": "`review` and `export` commands: a checkbox worklist grouped by tier, and savings/opportunities/hotspots/review files each recording their root; `--min-size` states what it omits", "commit": "d023290" },
+        { "description": "`--redact` and `--redact-prefix` on opportunities, hotspots, savings, pairs, report, review and export", "commit": "e0aecd5" },
+        { "description": "Managed bundles (Photos, Music, TV, iMovie, Final Cut, Logic, GarageBand libraries, sparse bundles) reported as keep instead of unknown", "commit": "19942d5" },
+        { "description": "Results show when the covering scan finished, warn when it is over a week old, and mark findings whose paths no longer exist", "commit": "c29313e" },
+        { "description": "`scan` lists denied directories with Full Disk Access guidance", "commit": "0e37474" }
+      ],
+      "changed": [
+        { "description": "Unexplained directories are disjoint and exclude bytes other findings already report; savings reports a reclaimable total; hotspots prints known-location paths; commands defaulting to the current directory say so on stderr", "commit": "d7cae79" }
+      ],
+      "fixed": [
+        { "description": "An archive beside a same-named directory is checked against it (plain tar and zip) instead of being called likely-safe on the name alone; plain `.tar` is now recognized as an archive", "commit": "9fe43d0" }
+      ],
+      "documentation": [
+        { "description": "MkDocs user guide (installation, concepts, every command, JSON output, known locations, troubleshooting) and a refreshed README", "commit": "fec18d5" },
+        { "description": "Roadmap Phases 7-9 and the byte-level no-double-counting contract", "commit": "7ce87fd" }
+      ],
+      "build": [
+        { "description": "Deploy the documentation site to GitHub Pages", "commit": "d82a8be" }
+      ],
+      "dependencies": [
+        { "description": "Bump actions/checkout and actions/setup-go to v7, modernc.org/sqlite to 1.58.0, and grokify/mogo to 0.74.8", "commit": "d0270e7" }
+      ]
+    },
+    {
       "version": "v0.1.0",
       "date": "2026-08-22",
       "commit": "dcc5c78",
