@@ -87,6 +87,19 @@ schemakit lint --property-case camelCase insights/schema/insights.schema.json
 blank import in `insights/schema/gen/tools.go` — don't remove that
 file or `go mod tidy` will silently strip the dependency.
 
+## Releasing
+
+Before tagging, besides the org checklist, confirm every commit hash in
+`CHANGELOG.json` is reachable from `main`:
+
+```bash
+go test -count=1 -run TestRepoChangelog ./internal/changelogcheck/
+```
+
+CI being green does not cover this (the shared Go CI checks out one commit),
+so a tag can ship with dead changelog links. The `Changelog References`
+workflow runs the same check on full history for pushes, PRs and `v*` tags.
+
 ## Roadmap
 
 RMI slug: `DISKWISE`. Phases and RMI IDs are tracked in
