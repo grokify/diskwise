@@ -49,6 +49,17 @@ an existing one's matching logic:
   to cover the new overlap risk — this is the test that would have
   caught a regression here.
 
+The contract also holds at the **byte** level for unexplained
+directories, not just path lists: `LargeUnexplainedDetector` reports
+only outermost, mutually disjoint directories, and
+`service.excludeExplained` subtracts bytes any other finding already
+reports (dropping directories left with nothing unexplained). A new
+detector's claimed paths flow into that subtraction via
+`Opportunities`; `TestService_Opportunities_UnexplainedExcludesExplainedBytes`
+is the guard. `Savings` totals must never exceed what the scanned root
+holds, and `SavingsByTier.Reclaimable()` deliberately excludes the
+`keep` and `unknown` tiers.
+
 ## Testing: never depend on real machine state
 
 `knowledge.Default` and the real `/Applications` reflect whatever

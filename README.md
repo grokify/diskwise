@@ -87,6 +87,14 @@ to use a different one. Re-walk just one subtree later with:
 diskwise rescan ~/Downloads
 ```
 
+**Permissions.** macOS attributes file access to the app that launched
+the scan, so run it from Terminal (or iTerm) rather than from another
+app's embedded terminal — otherwise that app receives the Photos,
+Desktop and Documents permission prompts. For a complete scan, grant
+your terminal Full Disk Access (System Settings > Privacy & Security).
+The scan summary lists any directories it could not read; `sudo` does
+not bypass these macOS privacy protections.
+
 ### 2. See what's using space
 
 ```bash

@@ -3,7 +3,7 @@
 **Initiative:** `INIT-DISKWISE-001`
 **Repository:** `github.com/grokify/diskwise`
 
-**Status:** v0.1.0 released 2026-08-22 (Phases 1–3 and 6 done; Phases 4–5 planned)
+**Status:** v0.1.0 released 2026-08-22 (Phases 1–3, 6 and 7 done; Phases 4–5 and 8 planned)
 **RMI slug:** `DISKWISE`
 
 Phase status is always derived from member RMI statuses, never set directly. Review and execution happen by phase. Commits implementing an RMI carry the git trailer `Refs: RMI-DISKWISE-NNN`.
@@ -61,6 +61,26 @@ Not part of the original PRD/TRD phased plan; added during v0.1.0 development in
 - [x] `RMI-DISKWISE-026` report/: self-contained HTML with sortable/filterable table and file links, plus XLSX with frozen header and autofilter
 - [x] `RMI-DISKWISE-027` insights/: JSON IR for narrative savings write-ups with generated/embedded JSON Schema and deterministic Markdown/HTML renderers
 
+## Phase 7 — Trustworthy Numbers & Scan Transparency
+**Theme:** Make reported totals add up and make the output self-explanatory — disjoint unexplained findings, no byte attributed twice, visible paths, honest savings semantics, and clear guidance when a scan is incomplete.
+
+Not part of the original PRD/TRD phased plan; added after dogfooding on a full home-directory scan.
+
+- [x] `RMI-DISKWISE-028` Disjoint unexplained directories: report only outermost large directories, and subtract bytes other findings already claim so tier totals never exceed the scanned root; extends the no-double-counting contract to byte level
+- [x] `RMI-DISKWISE-029` Honest savings output: `Reclaimable` total excludes keep and unknown tiers; hotspots text shows every known-location path
+- [x] `RMI-DISKWISE-030` Implicit-path announcement: commands defaulting to the current directory say so on stderr
+- [x] `RMI-DISKWISE-031` Scan transparency: list denied directories (capped sample in `ScanResult` JSON), macOS Full Disk Access guidance in place of the misleading elevated-permissions hint, and a run-from-Terminal note in `scan --help` and the README
+
+## Phase 8 — Upgrade Readiness & Review Workflow
+**Theme:** Answer "do I have enough room for X?" directly, and turn findings into a reviewable, shareable worklist without hand-assembly.
+
+- [ ] `RMI-DISKWISE-032` `preflight --need <size>`: free space, purgeable space and local snapshots (read-only), with a yes/no verdict
+- [ ] `RMI-DISKWISE-033` Archive/extracted-pair detection: pair an archive with a sibling directory, compare file counts and sizes, report same vs differs
+- [ ] `RMI-DISKWISE-034` Bundle-aware classification: managed bundles (e.g. `.photoslibrary`) reported as managed with layout-aware guidance, not "unknown"
+- [ ] `RMI-DISKWISE-035` `review --format md`: checkbox worklist grouped by tier, generated from opportunities
+- [ ] `RMI-DISKWISE-036` Consistent JSON export: `export --all <dir>` with an explicit root, and `Root` present in every JSON output
+- [ ] `RMI-DISKWISE-037` Path redaction (`--redact` or prefix allow/deny list) for reports and JSON intended to be shared
+
 ## Post-V1 backlog (unphased)
 
 Not yet broken into RMIs; not parsed by `vistudio roadmap import` since items here have no RMI ID yet. Promote into a phase above once scheduled.
@@ -71,3 +91,5 @@ Not yet broken into RMIs; not parsed by `vistudio roadmap import` since items he
 - Deep service adapters: Docker API, PostgreSQL/MySQL native queries
 - Duplicate and near-duplicate file detection (Phase 6's insights/ IR lets an LLM agent surface these manually today — see docs/releases/v0.1.0.md Known Limitations — but there's no built-in detector)
 - Linux support; versioned external rule corpus
+- More known locations: Time Machine local snapshots, MobileSync device backups, Mail downloads, per-project build artifacts (Rust `target/`, `node_modules`, Python venvs, Gradle caches), large `.git` object stores
+- Age/staleness signal (atime/mtime) to rank the review tier
