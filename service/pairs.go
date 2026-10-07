@@ -16,6 +16,8 @@ type ArchivePairQuery struct {
 	// (they must be decompressed in full); 0 uses
 	// DefaultMaxCompressedBytes, negative means no cap.
 	MaxCompressedBytes int64
+	// Progress, if non-nil, is called with each archive before it is read.
+	Progress func(archive string, size int64)
 }
 
 // DefaultMaxCompressedBytes is the compressed-archive size above which
@@ -38,7 +40,7 @@ func (s *Service) ArchivePairs(ctx context.Context, q ArchivePairQuery) ([]detec
 		maxCompressed = DefaultMaxCompressedBytes
 	}
 	pairs, err := detect.FindArchivePairs(ctx, s.db, q.Path, detect.ArchivePairOptions{
-		MinSize: q.MinSize, MaxCompressedBytes: maxCompressed,
+		MinSize: q.MinSize, MaxCompressedBytes: maxCompressed, Progress: q.Progress,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("service: archive pairs %s: %w", q.Path, err)

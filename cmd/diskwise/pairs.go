@@ -46,7 +46,7 @@ internal layout changes between app versions.`,
 			defer func() { _ = db.Close() }()
 
 			pairs, err := service.New(db).ArchivePairs(cmd.Context(), service.ArchivePairQuery{
-				Path: path, MinSize: minSize, MaxCompressedBytes: maxCompressed,
+				Path: path, MinSize: minSize, MaxCompressedBytes: maxCompressed, Progress: archiveProgress(cmd),
 			})
 			if err != nil {
 				return err

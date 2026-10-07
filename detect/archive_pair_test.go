@@ -221,3 +221,22 @@ func TestFindArchivePairs_UnreadableArchive(t *testing.T) {
 		t.Errorf("verdict=%s detail=%q, want unreadable with a reason", p.Verdict, p.Detail)
 	}
 }
+
+func TestFindArchivePairs_ReportsProgress(t *testing.T) {
+	root := t.TempDir()
+	m := []member{{"D/a", 10}}
+	writeTree(t, root, m)
+	writeTar(t, filepath.Join(root, "D.tar"), false, m)
+	db := ingestFixture(t, root)
+
+	var seen []string
+	_, err := FindArchivePairs(context.Background(), db, root, ArchivePairOptions{
+		Progress: func(archive string, _ int64) { seen = append(seen, archive) },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(seen) != 1 || seen[0] != filepath.Join(root, "D.tar") {
+		t.Errorf("Progress calls = %v, want one for D.tar", seen)
+	}
+}

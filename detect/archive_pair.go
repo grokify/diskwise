@@ -66,6 +66,9 @@ type ArchivePairOptions struct {
 	// must be decompressed in full); <= 0 means no cap. Plain tar and
 	// zip are never capped: they are read by header only.
 	MaxCompressedBytes int64
+	// Progress, if non-nil, is called with each archive just before it
+	// is read, so a caller can show activity during long comparisons.
+	Progress func(archive string, size int64)
 }
 
 // FindArchivePairs finds readable archives under root that have a
@@ -112,6 +115,9 @@ func FindArchivePairs(ctx context.Context, db *index.DB, root string, opts Archi
 			Archive: row.Path, ArchiveAlloc: row.AllocatedSizeFor(),
 			Dir: dir, DirAlloc: dirRow.AllocatedSizeFor(),
 			Compared: CompareAllFiles,
+		}
+		if opts.Progress != nil {
+			opts.Progress(row.Path, row.LogicalSizeFor())
 		}
 		sum, err := summarizeArchive(row.Path, row.LogicalSizeFor(), opts.MaxCompressedBytes)
 		switch {

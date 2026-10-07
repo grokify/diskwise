@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -77,6 +78,15 @@ func printJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+// jsonBytes renders v exactly as printJSON would write it.
+func jsonBytes(v any) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := printJSON(&buf, v); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // fprintf writes to w, ignoring the error: a failed write to
@@ -164,4 +174,13 @@ func redactorFor(cmd *cobra.Command) (*redact.Redactor, error) {
 		return nil, fmt.Errorf("determine home directory for --redact: %w", err)
 	}
 	return redact.New(home, prefixes), nil
+}
+
+// archiveProgress returns a callback that announces each archive being
+// read on stderr, so long comparisons are not silent. stdout (and so
+// --json output) is unaffected.
+func archiveProgress(cmd *cobra.Command) func(string, int64) {
+	return func(archive string, size int64) {
+		fprintf(cmd.ErrOrStderr(), "diskwise: reading %s (%s)\n", archive, humanBytes(size))
+	}
 }
