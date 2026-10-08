@@ -1,0 +1,1529 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Know your disk. Use it wisely. A macOS storage-intelligence tool that finds what is using space and what can be reclaimed.">
+      
+      
+      
+        <link rel="canonical" href="https://grokify.github.io/diskwise/specs/PLAN/">
+      
+      
+        <link rel="prev" href="../TRD/">
+      
+      
+        <link rel="next" href="../ROADMAP/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Plan - DiskWise</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#diskwise-implementation-plan-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DiskWise" class="md-header__button md-logo" aria-label="DiskWise" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DiskWise
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/grokify/diskwise" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    grokify/diskwise
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DiskWise" class="md-nav__button md-logo" aria-label="DiskWise" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DiskWise
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/grokify/diskwise" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    grokify/diskwise
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How DiskWise Thinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/scanning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scanning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/exploring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exploring Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/reclaiming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Finding Reclaimable Space
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/archive-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archives and Extracted Copies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/upgrade-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checking Free Space for an Upgrade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/sharing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports, Review Lists and Sharing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/known-locations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Locations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specifications
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specifications
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Requirements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TRD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Requirements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plan
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#guiding-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guiding constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-scanner-index-foundation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 — Scanner &amp; index foundation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-knowledge-registry-hotspots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 — Knowledge registry &amp; hotspots
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-archives-artifact-families-opportunities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 — Archives, artifact families &amp; opportunities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-developer-detectors-explainability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — Developer detectors &amp; explainability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-mcp-server-contract-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5 — MCP server &amp; contract hardening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-reporting-narrative-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6 — Reporting &amp; narrative analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explicitly-deferred-post-v1-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicitly deferred (post-V1 backlog)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ROADMAP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.1.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#guiding-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guiding constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-scanner-index-foundation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 — Scanner &amp; index foundation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-knowledge-registry-hotspots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 — Knowledge registry &amp; hotspots
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-archives-artifact-families-opportunities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 — Archives, artifact families &amp; opportunities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-developer-detectors-explainability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — Developer detectors &amp; explainability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-mcp-server-contract-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5 — MCP server &amp; contract hardening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-reporting-narrative-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6 — Reporting &amp; narrative analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explicitly-deferred-post-v1-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicitly deferred (post-V1 backlog)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="diskwise-implementation-plan-plan">DiskWise — Implementation Plan (PLAN)<a class="headerlink" href="#diskwise-implementation-plan-plan" title="Permanent link">&para;</a></h1>
+<p><strong>Status:</strong> Draft
+<strong>Date:</strong> 2026-08-19
+<strong>Repo:</strong> github.com/grokify/diskwise</p>
+<p>This plan sequences the work defined in the <a href="../PRD/">PRD</a> and <a href="../TRD/">TRD</a>. Roadmap items and phase membership are tracked in <a href="../ROADMAP/">ROADMAP.md</a>; this document explains ordering, dependencies, and verification per phase.</p>
+<h2 id="guiding-constraints">Guiding constraints<a class="headerlink" href="#guiding-constraints" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Go stack first.</strong> Prove the full engine via CLI + MCP before any SwiftUI work. The only feature that truly requires UI (visual screenshot review) is out of V1 scope.</li>
+<li><strong>Read-only V1.</strong> No deletion code paths. Output is a manual-deletion worklist (directory rollups, <code>--paths</code>).</li>
+<li><strong>Library-first.</strong> Every phase lands as library packages + thin adapter changes; each phase leaves <code>main</code> compiling, tested, and lint-clean.</li>
+<li><strong>Verify dependency versions</strong> (cobra, MCP go-sdk, sqlite driver) at the moment of <code>go get</code>, per global convention.</li>
+</ul>
+<h2 id="phase-1-scanner-index-foundation">Phase 1 — Scanner &amp; index foundation<a class="headerlink" href="#phase-1-scanner-index-foundation" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> <code>diskwise scan ~ &amp;&amp; diskwise tree ~ --depth 2</code> gives correct, fast subtree totals with logical + allocated sizes.</p>
+<p>Order of work:</p>
+<ol>
+<li>Module scaffold: <code>go.mod</code>, package skeletons, CI (build/test/lint), README stub.</li>
+<li><code>platform/darwin</code>: allocated size (<code>st_blocks×512</code>), device/inode, volume capacity/mount detection.</li>
+<li><code>scan/</code>: breadth-first depth-limited walker → prioritized descent queue → full enumeration; hard-link dedup; mount-point and permission-denied handling (recorded, surfaced).</li>
+<li><code>index/</code>: SQLite schema (TRD §5), batched ingest, subtree rollup computation, <code>rescan &lt;path&gt;</code> subtree replacement.</li>
+<li><code>service/</code> + <code>cmd/diskwise</code>: <code>scan</code>, <code>rescan</code>, <code>summary</code>, <code>tree</code>, <code>largest</code> with <code>--json</code>; progress streaming to stderr.</li>
+</ol>
+<p><strong>Dependencies:</strong> none. <strong>Decision point:</strong> SQLite driver benchmark (modernc vs mattn) once ingest exists — pick and record in TRD.</p>
+<p><strong>Verify:</strong> fixture tests (sparse file → allocated &lt; logical; hard links counted once); run on a real home directory; <code>tree</code> totals cross-checked against <code>du -sk</code> within tolerance (APFS clones explain deltas); first partial output ≤ 5 s.</p>
+<h2 id="phase-2-knowledge-registry-hotspots">Phase 2 — Knowledge registry &amp; hotspots<a class="headerlink" href="#phase-2-knowledge-registry-hotspots" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> <code>diskwise hotspots</code> merges known-location hits (with semantics) and large unexplained subtrees.</p>
+<p>Order of work:</p>
+<ol>
+<li><code>knowledge/</code>: registry types (probe, data paths, semantics, default action class) + initial entries (TRD §4.1: docker-desktop, xcode, homebrew, go, node, python, ai-models, ios-backups, browsers, trash).</li>
+<li>Scanner integration: registry probed first; hits enqueued at top priority; claimed subtrees skipped by generic walk and marked <code>claimed</code>.</li>
+<li><code>entity/</code> + <code>detect/</code>: KnownLocationDetector emits entities/findings from registry hits; Docker.raw sparse-size semantics applied.</li>
+<li>LargeUnexplainedDetector: large <code>complete</code> subtrees with no entity claim.</li>
+<li><code>hotspots</code> command + service query; <code>summary</code> gains entity attribution ("Docker 83 GB, Xcode 31 GB, …").</li>
+</ol>
+<p><strong>Depends on:</strong> Phase 1 index and walker.</p>
+<p><strong>Verify:</strong> on a machine with Docker Desktop, <code>hotspots</code> reports Docker at allocated (not logical) size; probe-failed entries cost ~0 scan time; golden findings for a fixture registry.</p>
+<h2 id="phase-3-archives-artifact-families-opportunities">Phase 3 — Archives, artifact families &amp; opportunities<a class="headerlink" href="#phase-3-archives-artifact-families-opportunities" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> <code>diskwise opportunities</code> / <code>savings</code> produce a tiered, directly-actionable worklist.</p>
+<p>Order of work:</p>
+<ol>
+<li><code>policy/</code>: action classes, fail-closed rules, managed-data guard, confidence-vs-class separation. (Land policy before detectors that feed it, so tests constrain them from day one.)</li>
+<li>ArchiveInstallerDetector: extension catalog, extraction-sibling evidence, DMG installed-app evidence.</li>
+<li>ArtifactFamilyDetector: filename pattern parsing (<code>&lt;product&gt;-&lt;semver&gt;-&lt;platform&gt;-&lt;arch&gt;</code>), family grouping, keep-newest vs remove-all scenarios, backup-name exclusions.</li>
+<li><code>rollup/</code>: highest fully-reclaimable directory; mixed-directory decomposition.</li>
+<li><code>opportunities</code> (with <code>--action</code>, <code>--min-confidence</code>, <code>--type</code>, <code>--paths</code>) and <code>savings</code> commands.</li>
+</ol>
+<p><strong>Depends on:</strong> Phase 1 index; Phase 2 entity model.</p>
+<p><strong>Verify:</strong> the Elasticsearch fixture (5 tarballs in Downloads) yields one family finding with both scenarios; adversarial policy tests (live-db lookalike, <code>backup</code> filenames, mixed dirs) never yield <code>safe_delete</code>; every emitted <code>opportunities</code> path is manually actionable as a single unit.</p>
+<h2 id="phase-4-developer-detectors-explainability">Phase 4 — Developer detectors &amp; explainability<a class="headerlink" href="#phase-4-developer-detectors-explainability" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> deeper attribution for developer storage; every recommendation explainable.</p>
+<p>Order of work:</p>
+<ol>
+<li>Registry expansion to detector depth: Xcode (DerivedData vs Archives vs simulators, <code>.xip</code>), Docker directory-structure breakdown (images/volumes/build-cache by path — no Docker API), node_modules discovery across project trees, Go/Rust/Python build outputs.</li>
+<li>ProjectDetector: attribute source + <code>node_modules</code> + <code>target/</code> + venv + <code>.git</code> to one project entity ("VisionStudio project — 21 GB").</li>
+<li><code>inspect &lt;path|entity&gt;</code> and <code>explain &lt;finding-id&gt;</code>: evidence chain rendering.</li>
+<li>Findings persistence &amp; staleness: findings tied to scan runs; <code>rescan</code> invalidates affected findings.</li>
+</ol>
+<p><strong>Depends on:</strong> Phase 2 registry/entities, Phase 3 policy.</p>
+<p><strong>Verify:</strong> project fixture attributes multi-ecosystem bloat to one entity; <code>explain</code> renders every evidence type; rescan after (manual) deletion updates savings correctly.</p>
+<h2 id="phase-5-mcp-server-contract-hardening">Phase 5 — MCP server &amp; contract hardening<a class="headerlink" href="#phase-5-mcp-server-contract-hardening" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> agents get the same answers as the CLI, guaranteed.</p>
+<p>Order of work:</p>
+<ol>
+<li><code>cmd/diskwise-mcp</code>: official Go SDK, stdio transport, tools per TRD §9 (read-only, mirrors service 1:1).</li>
+<li>Contract tests: fixture → service structs ↔ CLI <code>--json</code> ↔ MCP results, structural equality enforced in CI.</li>
+<li>Long-scan ergonomics over MCP: scan returns run id + progress polling.</li>
+<li>Packaging: <code>go install</code> paths for both binaries; Homebrew formula/goreleaser deferred to release time; README with CLI + MCP setup (Claude Code config example).</li>
+<li>End-to-end dogfood: register the MCP server in Claude Code, ask "why is my disk full?" and "safest way to free 30 GB?" — findings must come entirely from tool results.</li>
+</ol>
+<p><strong>Depends on:</strong> service layer stability (Phases 1–4).</p>
+<p><strong>Verify:</strong> contract tests green in CI; dogfood transcript reviewed; <code>golangci-lint</code> clean; coverage badge updated (<code>gocoverbadge -dir . -exclude cmd -badge-only</code>).</p>
+<h2 id="phase-6-reporting-narrative-analysis">Phase 6 — Reporting &amp; narrative analysis<a class="headerlink" href="#phase-6-reporting-narrative-analysis" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> <code>diskwise report</code> and <code>diskwise insights</code> give a shareable/agent-authorable view of <code>opportunities</code> beyond the terminal.</p>
+<p>Not part of the original phase sequence above — built during v0.1.0 development in direct response to user requests, after Phase 3 shipped. Recorded here after the fact so the roadmap matches actual code state; see ROADMAP.md Phase 6 for RMI numbers.</p>
+<p>Order of work:</p>
+<ol>
+<li><code>report/</code>: flatten <code>service.Opportunity</code> into report rows; self-contained HTML (vendored sortable/filterable table script, no CDN, <code>file://</code> links); XLSX via <code>excelize</code> (frozen header, autofilter).</li>
+<li><code>insights/</code>: <code>insights.Report</code> JSON IR (opportunities with directories, evidence, kept/redundant path <code>Pair</code>s, and <code>Action</code>s discriminated by method — filesystem/cli/app_ui); JSON Schema generated from the Go structs (<code>invopop/jsonschema</code> via a local generator, since <code>schemakit generate</code>'s network-fetch approach can't resolve an unpublished/private module) and embedded via <code>go:embed</code>; deterministic Markdown and HTML renderers.</li>
+</ol>
+<p><strong>Depends on:</strong> Phase 3 (<code>service.Opportunities</code>).</p>
+<p><strong>Verify:</strong> <code>insights.Report.Validate()</code> rejects malformed/incomplete documents (bad schema version, gap in rank sequence, unknown enum values, incomplete <code>Pair</code>); <code>WriteMarkdown</code>/<code>WriteHTML</code> are pure functions of the <code>Report</code> (same input → same output); round-tripped against a real home-directory scan, not just fixtures.</p>
+<h2 id="explicitly-deferred-post-v1-backlog">Explicitly deferred (post-V1 backlog)<a class="headerlink" href="#explicitly-deferred-post-v1-backlog" title="Permanent link">&para;</a></h2>
+<p>SwiftUI app + visual screenshot review grid; cleanup execution (Trash-first, verified backups); FSEvents incremental index + growth snapshots ("why did my disk grow?"); deep service adapters (Docker API, Postgres/MySQL queries); duplicate/near-duplicate detection; Linux port; versioned external rule corpus.</p>
+<h2 id="working-conventions">Working conventions<a class="headerlink" href="#working-conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Conventional commits with <code>Refs: RMI-DISKWISE-NNN</code> trailers; atomic topical commits (scaffolding included — no monolithic "initial commit").</li>
+<li>Each phase reviewed and executed as a unit (org convention: review by phase, not individual RMI).</li>
+<li>Pre-push checklist per global CLAUDE.md (tests, lint, no local replace directives, coverage badge).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
