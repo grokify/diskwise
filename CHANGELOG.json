@@ -5,6 +5,11 @@
   "versioning": "semver",
   "commitConvention": "conventional",
   "maintainers": ["grokify", "johncwang@gmail.com"],
+  "unreleased": {
+    "fixed": [
+      { "description": "`diskwise --version` printed `dev` for every build that did not set it with a linker flag, including `go install ...@vX.Y.Z`; it now reports the module version Go embeds (the tag, a pseudo-version past it, `+dirty` for uncommitted changes)", "commit": "d3f07a4" }
+    ]
+  },
   "releases": [
     {
       "version": "v0.3.0",
