@@ -9,7 +9,7 @@
     {
       "version": "v0.3.0",
       "date": "2026-10-07",
-      "commit": "c797473",
+      "commit": "43a58aa",
       "highlights": [
         { "description": "One report document: a single versioned JSON file (`report.json`) from which the HTML, spreadsheet and Markdown reports are rendered, replacing the overlapping savings, hotspots and opportunities outputs.", "commit": "c5a39f2" },
         { "description": "`report --from report.json` renders a saved document on any machine with no index, scan or file access; rendering is deterministic, and redaction can be applied at render time.", "commit": "e67b363" }
