@@ -118,6 +118,20 @@ CI being green does not cover this (the shared Go CI checks out one commit),
 so a tag can ship with dead changelog links. The `Changelog References`
 workflow runs the same check on full history for pushes, PRs and `v*` tags.
 
+**Record the release commit after tagging.** Commits often land between the
+last documentation change and the tag, so the commit a release will be tagged
+on cannot be predicted. Write the new release's top-level `commit` in
+`CHANGELOG.json` as the last substantive commit before tagging (the check
+accepts any reachable hash), then after tagging set it to
+`git rev-parse --short=7 vX.Y.Z^{commit}`, add any commits that landed late
+(for example a dependency bump) as entries, regenerate `CHANGELOG.md`, and push
+that as a follow-up commit. Change only the release-level `commit`; entries
+keep the commits they describe.
+
+`schangelog generate` collapses dependency lists to a count ("_1 dependency
+update_"). The committed `CHANGELOG.md` renders them as explicit bullets, so
+re-expand them after regenerating.
+
 ## Roadmap
 
 RMI slug: `DISKWISE`. Phases and RMI IDs are tracked in
