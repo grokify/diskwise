@@ -31,6 +31,9 @@
       ],
       "build": [
         { "description": "Run the changelog reference check on full history for changelog changes and version tags", "commit": "2e3677a" }
+      ],
+      "dependencies": [
+        { "description": "Bump modernc.org/sqlite to 1.60.1, grokify/mogo to 0.75.0, and modelcontextprotocol/go-sdk to 1.8.0, with updated indirect dependencies", "commit": "43a58aa" }
       ]
     },
     {
