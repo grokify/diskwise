@@ -52,7 +52,9 @@ troubleshooting. Project documents live in this repo:
 
 **v0.1.0** shipped the scanner, SQLite index, knowledge registry,
 detectors, policy engine, report/insights output formats, and the `diskwise`
-CLI (roadmap Phases 1–3 and 6). **v0.2.0** (Phases 7–9) adds:
+CLI (roadmap Phases 1–3 and 6). **v0.3.0** (Phase 10) adds a single report
+document that HTML, XLSX and Markdown are rendered from, and `report --from`
+to render a saved document anywhere. **v0.2.0** (Phases 7–9) added:
 
 - Totals that add up: unexplained directories are disjoint, bytes another
   finding already reports are excluded, and `savings` no longer counts the
@@ -65,8 +67,10 @@ CLI (roadmap Phases 1–3 and 6). **v0.2.0** (Phases 7–9) adds:
   worklist and a consistent set of JSON files; `--redact` /
   `--redact-prefix` make output safe to share.
 
-`opportunities --json` is now an object rather than a bare array; see the
-[v0.2.0 release notes](docs/releases/v0.2.0.md).
+`opportunities --json` became an object rather than a bare array in v0.2.0,
+and v0.3.0 changes what `export` writes; see the
+[v0.2.0](docs/releases/v0.2.0.md) and [v0.3.0](docs/releases/v0.3.0.md)
+release notes.
 
 The MCP server (`cmd/diskwise-mcp`) is a skeleton with no tools registered
 yet (Phases 4–5, still planned). See

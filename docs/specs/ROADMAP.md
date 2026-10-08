@@ -3,7 +3,7 @@
 **Initiative:** `INIT-DISKWISE-001`
 **Repository:** `github.com/grokify/diskwise`
 
-**Status:** v0.1.0 released 2026-08-22 (Phases 1–3 and 6); v0.2.0 released (Phases 7–9); Phase 10 done on `main`, unreleased; Phases 4–5 planned
+**Status:** v0.1.0 released 2026-08-22 (Phases 1–3 and 6); v0.2.0 released (Phases 7–9); v0.3.0 prepared (Phase 10); Phases 4–5 planned
 **RMI slug:** `DISKWISE`
 
 Phase status is always derived from member RMI statuses, never set directly. Review and execution happen by phase. Commits implementing an RMI carry the git trailer `Refs: RMI-DISKWISE-NNN`.
