@@ -7,11 +7,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
-
-var version = "dev"
 
 func main() {
 	if err := newRootCmd().Execute(); err != nil {
@@ -25,7 +24,7 @@ func newRootCmd() *cobra.Command {
 		Use:           "diskwise",
 		Short:         "Know your disk. Use it wisely.",
 		Long:          "DiskWise discovers what is consuming macOS disk space and what can be safely reclaimed.",
-		Version:       version,
+		Version:       resolveVersion(version, debug.ReadBuildInfo),
 		SilenceUsage:  true, // a runtime error (e.g. "not indexed") isn't a usage mistake
 		SilenceErrors: true, // main() prints the error once, itself
 	}
