@@ -110,6 +110,20 @@ Potential savings under /Users/you: 335.1 GiB
 DiskWise never deletes, moves, or modifies anything it finds. It produces an
 explained worklist; you act on it.
 
+To keep or share a report:
+
+```bash
+diskwise export ~ --out ~/diskwise-reports                                    # report.json, report.html, review.md
+diskwise export ~ --out ~/diskwise-reports --redact-prefix ~/work/clientname  # the same, with that tree redacted
+diskwise report --from ~/diskwise-reports/report.json --format xlsx --out ~/diskwise-reports/report.xlsx
+```
+
+Reports contain real paths, so write them outside any git repository.
+`--redact` shows your home directory as `~`; `--redact-prefix` (repeatable)
+replaces everything under a prefix with an opaque token. A saved
+`report.json` can be rendered, and redacted, again later on any machine. See
+[Reports, review lists and sharing](docs/guides/sharing.md).
+
 ## Commands
 
 | Command | Purpose |
